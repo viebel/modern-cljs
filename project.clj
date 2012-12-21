@@ -5,14 +5,13 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :min-lein-version "2.0.0"
   ; clojure source code path
-  :source-paths ["src/clj"
-                 "compiler/clojurescript/src/clj"
-                 "compiler/clojurescript/src/cljs"]
+  :source-paths ["src/clj"]
   :dependencies [[org.clojure/clojure "1.4.0"]
                  ; compojure dependency
                  [compojure "1.1.3"]
                  ; domina dependency
-                 [domina "1.0.0"]]
+                 [domina "1.0.0"]
+                 [hiccups "0.1.1"]]
   :plugins [; cljsbuild plugin
             [lein-cljsbuild "0.2.9"]
             ; ring plugin
@@ -38,9 +37,6 @@
                 ; Google Closure Compiler options
                 :compiler {; the name of emitted JS script file
                            :output-to "resources/public/js/modern.js"
-                           ; the name of the CLJS source file to be
-                           ; excluded from compilation
-                           :exclude ["modern_cljs/connect.cljs"]
                            ;advanced optimization
                            :optimizations :advanced}}
                :pre-prod

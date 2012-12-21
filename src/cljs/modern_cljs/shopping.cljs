@@ -1,24 +1,35 @@
 (ns modern-cljs.shopping
-  (:use [domina :only [by-id value set-value!]]))
+  (:require-macros [hiccups.core :as hsc])
+  (:require [domina :as dom]
+            [domina.events :as evts]
+            [domina.xpath :as xdom]
+            [hiccups.runtime :as hsrt]))
 
-;;; we need to :export calculate funtion to protect it from renanimg
-;;; caused by Google Closure Compiler when :simple or :advanced
-;;; optimization option are used.
-(defn ^:export calculate []
-  (let [quantity (value (by-id "quantity"))
-        price (value (by-id "price"))
-        tax (value (by-id "tax"))
-        discount (value (by-id "discount"))]
-    ;; bad CLJ style
-    ;; (set-value! (by-id "total")
-    ;;             (.toFixed (- (* (+ 1 (/ tax 100))
-    ;;                             (* quantity price))
-    ;;                          discount)
-    ;;                       2))
-
-    ;; better CLJ style
-    (set-value! (by-id "total") (-> (* quantity price)
+(defn calculate []
+  (let [quantity (dom/value (dom/by-id "quantity"))
+        price (dom/value (dom/by-id "price"))
+        tax (dom/value (dom/by-id "tax"))
+        discount (dom/value (dom/by-id "discount"))]
+    (dom/set-value! (dom/by-id "total") (-> (* quantity price)
                                     (* (+ 1 (/ tax 100)))
                                     (- discount)
                                     (.toFixed 2)))
     false))
+
+(defn appendinfo []
+  (dom/append! (xdom/xpath "//body/form") (hsc/html [:div {:id "txtcalc"} "Click to calculate"])))
+
+(defn removeinfo []
+  (dom/destroy! (dom/by-id "txtcalc")))
+
+(defn addcalclauncher []
+  (doall
+   [(evts/listen! (dom/by-id "calculate") :mouseover (fn [evt] (appendinfo)))
+    (evts/listen! (dom/by-id "calculate") :mouseout (fn [evt] (removeinfo)))
+    (evts/listen! (dom/by-id "calculate") :click  (fn [evt] (calculate)))]))
+
+;; the same as the previous sample
+(defn ^:export init []
+  (if (and js/document
+           (.-getElementById js/document))
+    (addcalclauncher)))
