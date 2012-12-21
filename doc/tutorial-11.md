@@ -102,7 +102,7 @@ Together with the calculate and reset feature associated with the
 click, we want to add a mouseover/mousout event which print on the
 form the behavior of the buttons *Calcuate* and *Reset*, that is
 
-[Shopping events][7]
+![Shopping events][7]
 
 To do this, we define the functions `addcalclauncher` and
 `addresetlauncher`, that handle the events associated with the

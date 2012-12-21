@@ -95,7 +95,6 @@ mutable world of the file system.
 
 In this tutorial we get a brief insight in event handling by means of
 [domina library][13] and [hiccups][21].
-TO BE DONE
 
 # Appendices
 
