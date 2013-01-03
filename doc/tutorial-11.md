@@ -288,7 +288,7 @@ button. Similary for the *Reset* button.
 
 Here the code for the calculation
 
-```cljs
+```clj
 	(c2event/on-raw "#calculateButton" :click calculate)
 	(c2event/on-raw "#calculateButton" :mouseover (fn [] (add-info "#shoppingForm" "calculate")))
 	(c2event/on-raw "#calculateButton" :mouseout (fn [] (remove-info "#calculate")))
@@ -296,16 +296,15 @@ Here the code for the calculation
 
 and the code for the reset action
 
-```cljs
+```clj
 	(c2event/on-raw "#resetButton" :click reset-form)
 	(c2event/on-raw "#resetButton" :mouseover (fn [] (add-info "#shoppingForm" "reset")))
 	(c2event/on-raw "#resetButton" :mouseout (fn [] (remove-info "#reset")))
 ```
 
-where `calculate`, `reset`, `add-info` and `remove-info` are now defined as follow
+where `calculate`, `reset`, `add-info` and `remove-info` are now defined as follows
 
-```cljs
-
+```clj
 	(defn calculate []
 		(let [quantity (c2dom/val "#quantity")
 			price (c2dom/val "#price")
