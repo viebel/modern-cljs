@@ -289,42 +289,43 @@ button. Similary for the *Reset* button.
 Here the code for the calculation
 
 ```cljs
-(c2event/on-raw "#calculateButton" :click calculate)
-(c2event/on-raw "#calculateButton" :mouseover (fn [] (add-info "#shoppingForm" "calculate")))
-(c2event/on-raw "#calculateButton" :mouseout (fn [] (remove-info "#calculate")))
+	(c2event/on-raw "#calculateButton" :click calculate)
+	(c2event/on-raw "#calculateButton" :mouseover (fn [] (add-info "#shoppingForm" "calculate")))
+	(c2event/on-raw "#calculateButton" :mouseout (fn [] (remove-info "#calculate")))
 ```
 
 and the code for the reset action
 
 ```cljs
-(c2event/on-raw "#resetButton" :click reset-form)
-(c2event/on-raw "#resetButton" :mouseover (fn [] (add-info "#shoppingForm" "reset")))
-(c2event/on-raw "#resetButton" :mouseout (fn [] (remove-info "#reset")))
+	(c2event/on-raw "#resetButton" :click reset-form)
+	(c2event/on-raw "#resetButton" :mouseover (fn [] (add-info "#shoppingForm" "reset")))
+	(c2event/on-raw "#resetButton" :mouseout (fn [] (remove-info "#reset")))
 ```
 
 where `calculate`, `reset`, `add-info` and `remove-info` are now defined as follow
 
 ```cljs
-(defn calculate []
-	(let [quantity (c2dom/val "#quantity")
-        price (c2dom/val "#price")
-        tax (c2dom/val "#tax")
-        discount (dom/val "#discount")]
-    (c2dom/val "#total" (-> (* quantity price)
-                           (* (+ 1 (/ tax 100)))
-                           (- discount)
-                           (.toFixed 2)))))
 
-(defn reset-form []
-  (let [fields ["#quantity" "#price" "#tax" "#discount" "#total"]
-        init ["1" "1.00" "0.0" "0.0" "0.00"]]
-  (dorun (map c2dom/val fields init))))
+	(defn calculate []
+		(let [quantity (c2dom/val "#quantity")
+			price (c2dom/val "#price")
+			tax (c2dom/val "#tax")
+			discount (dom/val "#discount")]
+		(c2dom/val "#total" (-> (* quantity price)
+			                (* (+ 1 (/ tax 100)))
+							(- discount)
+							(.toFixed 2)))))
 
-(defn add-info [el name]
-  (c2dom/append! el [:div {:id name} (str "Click to " name)]))
+	(defn reset-form []
+		(let [fields ["#quantity" "#price" "#tax" "#discount" "#total"]
+			  init ["1" "1.00" "0.0" "0.0" "0.00"]]
+		  (dorun (map c2dom/val fields init))))
 
-(defn remove-info [el]
-  (c2dom/remove! el))
+	(defn add-info [el name]
+		(c2dom/append! el [:div {:id name} (str "Click to " name)]))
+
+	(defn remove-info [el]
+		(c2dom/remove! el))
 ```
 
 which are slightly different since they use the *c2 library* functions

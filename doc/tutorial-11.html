@@ -311,43 +311,46 @@ button. Similary for the <em>Reset</em> button.</p>
 <p>Here the code for the calculation</p>
 
 <p><code>cljs
-(c2event/on-raw "#calculateButton" :click calculate)
-(c2event/on-raw "#calculateButton" :mouseover (fn [] (add-info "#shoppingForm" "calculate")))
-(c2event/on-raw "#calculateButton" :mouseout (fn [] (remove-info "#calculate")))
+    (c2event/on-raw "#calculateButton" :click calculate)
+    (c2event/on-raw "#calculateButton" :mouseover (fn [] (add-info "#shoppingForm" "calculate")))
+    (c2event/on-raw "#calculateButton" :mouseout (fn [] (remove-info "#calculate")))
 </code></p>
 
 <p>and the code for the reset action</p>
 
 <p><code>cljs
-(c2event/on-raw "#resetButton" :click reset-form)
-(c2event/on-raw "#resetButton" :mouseover (fn [] (add-info "#shoppingForm" "reset")))
-(c2event/on-raw "#resetButton" :mouseout (fn [] (remove-info "#reset")))
+    (c2event/on-raw "#resetButton" :click reset-form)
+    (c2event/on-raw "#resetButton" :mouseover (fn [] (add-info "#shoppingForm" "reset")))
+    (c2event/on-raw "#resetButton" :mouseout (fn [] (remove-info "#reset")))
 </code></p>
 
 <p>where <code>calculate</code>, <code>reset</code>, <code>add-info</code> and <code>remove-info</code> are now defined as follow</p>
 
-<p>```cljs
-(defn calculate []
-  (let [quantity (c2dom/val "#quantity")
+<p>```cljs</p>
+
+<pre><code>(defn calculate []
+    (let [quantity (c2dom/val "#quantity")
         price (c2dom/val "#price")
         tax (c2dom/val "#tax")
         discount (dom/val "#discount")]
-    (c2dom/val "#total" (-> (* quantity price)
-                           (* (+ 1 (/ tax 100)))
-                           (- discount)
-                           (.toFixed 2)))))</p>
+    (c2dom/val "#total" (-&gt; (* quantity price)
+                        (* (+ 1 (/ tax 100)))
+                        (- discount)
+                        (.toFixed 2)))))
 
-<p>(defn reset-form []
-  (let [fields ["#quantity" "#price" "#tax" "#discount" "#total"]
-        init ["1" "1.00" "0.0" "0.0" "0.00"]]
-  (dorun (map c2dom/val fields init))))</p>
+(defn reset-form []
+    (let [fields ["#quantity" "#price" "#tax" "#discount" "#total"]
+          init ["1" "1.00" "0.0" "0.0" "0.00"]]
+      (dorun (map c2dom/val fields init))))
 
-<p>(defn add-info [el name]
-  (c2dom/append! el [:div {:id name} (str "Click to " name)]))</p>
+(defn add-info [el name]
+    (c2dom/append! el [:div {:id name} (str "Click to " name)]))
 
-<p>(defn remove-info [el]
-  (c2dom/remove! el))
-```</p>
+(defn remove-info [el]
+    (c2dom/remove! el))
+</code></pre>
+
+<p>```</p>
 
 <p>which are slightly different since they use the <em>c2 library</em> functions
 (actually those are not the only differences, we wanted to show other
