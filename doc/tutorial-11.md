@@ -1,7 +1,11 @@
-# Tutorial 11 - Handling events using Domina and Hiccups
+# Tutorial 11 - Handling events using Domina+Hiccups and c2
 
 In this tutorial we get a brief insight in event handling by means of
-[domina library][1] and [hiccups][2].
+[domina library][1] and [hiccups][2] or the [c2 library][9]. Actually,
+*c2* is a declarative data visualization library which goes far beyond
+the usage presented here. We refer to next tutorials or the
+[readme][10] for further details on data driven visualization with
+*c2*.
 
 ## Introduction
 
@@ -196,16 +200,148 @@ lines
 > and the capture-phase, anyway domina allows the user follow both the
 > approaches.
 
+## Another approach for building the page
+
+We have seen above how [domina][1] and [hiccups][2] can be expolited
+for HTML pages manipulations. Anyway a different approach is possible,
+that is we can build an html page entirely in the ClojureScript code
+and declaring only a minimal skeleton in our HTML. To do so we employ
+the [c2 library][9].
+
+The HTML page is now the following.
+
+```HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Shopping Calculator</title>
+    <!--[if lt IE 9]>
+<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <form action="" method="post" id="shoppingForm" novalidate></form>   
+  <script src="js/modern_dbg.js"></script>
+</body>
+</html>
+```
+
+and the shopping form can be initialized using the `bind!` macro of
+`c2.util`, which must be imported by the usual `use-macro`
+declaration.
+
+```clj
+(bind! "#shoppingForm"
+       [:form
+        [:legend "Shopping Calculator"]
+        [:fieldset
+         [:div [:label {:for "quantity"} "Quantity"
+                [:input#quantity {:type "number"
+                                  :name "quantity"
+                                  :value "1"
+                                  :min "1"
+                                  :required true}]]]
+         [:div [:label {:for "price"} "Price Per Unit"
+                [:input#price {:type "text"
+                               :name "price"
+                               :value "1.00"
+                               :required true}]]]
+         [:div [:label {:for "tax"} "Tax Rate (%)"
+                [:input#tax {:type "text"
+                             :name "tax"
+                             :value "0.0"
+                             :requried true}]]]
+         [:div [:label {:for "discount"} "Discount"
+                [:input#discount {:type "text"
+                                  :name "discount"
+                                  :value "0.0"
+                                  :required true}]]]
+         [:div [:label {:for "total"} "Total"
+                [:input#total {:type "text"
+                               :name "total"
+                               :value "0.00"
+                               :required true}]]]
+         [:div [:input#calculateButton {:type "button"
+                                         :value "Calculate"}]]
+         [:div [:input#resetButton {:type "button"
+                               :value "Reset"}]]]])
+
+```
+
+> Observe that the basic difference between this approach goes beyond
+> the language we use to build a HTML page. Following this approach
+> the actions associated with the DOM elements don't require to be
+> initialized (see the *init* functions in the previous tutorials) and
+> so, no CLJS functions must be exported, as we shall see below.
+
+We see now how the events discussed in the previous section can be
+handled with *c2*.
+
+## The mouseover/mouseout event with c2
+
+We recall that we want to attach to the *Calculate* button a mouseover
+event which prints on the form some information about the behavior of
+the button, which must disappear when the mouse moves out the
+button. Similary for the *Reset* button.
+
+Here the code for the calculation
+
+```cljs
+(c2event/on-raw "#calculateButton" :click calculate)
+(c2event/on-raw "#calculateButton" :mouseover (fn [] (add-info "#shoppingForm" "calculate")))
+(c2event/on-raw "#calculateButton" :mouseout (fn [] (remove-info "#calculate")))
+```
+
+and the code for the reset action
+
+```cljs
+(c2event/on-raw "#resetButton" :click reset-form)
+(c2event/on-raw "#resetButton" :mouseover (fn [] (add-info "#shoppingForm" "reset")))
+(c2event/on-raw "#resetButton" :mouseout (fn [] (remove-info "#reset")))
+```
+
+where `calculate`, `reset`, `add-info` and `remove-info` are now defined as follow
+
+```cljs
+(defn calculate []
+	(let [quantity (c2dom/val "#quantity")
+        price (c2dom/val "#price")
+        tax (c2dom/val "#tax")
+        discount (dom/val "#discount")]
+    (c2dom/val "#total" (-> (* quantity price)
+                           (* (+ 1 (/ tax 100)))
+                           (- discount)
+                           (.toFixed 2)))))
+
+(defn reset-form []
+  (let [fields ["#quantity" "#price" "#tax" "#discount" "#total"]
+        init ["1" "1.00" "0.0" "0.0" "0.00"]]
+  (dorun (map c2dom/val fields init))))
+
+(defn add-info [el name]
+  (c2dom/append! el [:div {:id name} (str "Click to " name)]))
+
+(defn remove-info [el]
+  (c2dom/remove! el))
+```
+
+which are slightly different since they use the *c2 library* functions
+(actually those are not the only differences, we wanted to show other
+possible implementations).
+
+> As mentioned above, no ^:export tags must be provided.
 
 
 
-
-[1]: https://github.com/levand/domina
-[2]: https://github.com/teropa/hiccups
-[3]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-04.md
-[4]: http://www.larryullman.com/books/modern-javascript-develop-and-design/
-[5]: http://www.larryullman.com/
-[6]: https://raw.github.com/magomimmo/modern-cljs/tut-11/doc/images/form-idle.png
-[7]: https://raw.github.com/magomimmo/modern-cljs/tut-11/doc/images/form-events.png
-[8]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-06.md
-
+[1]:  https://github.com/levand/domina
+[2]:  https://github.com/teropa/hiccups
+[3]:  https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-04.md
+[4]:  http://www.larryullman.com/books/modern-javascript-develop-and-design/
+[5]:  http://www.larryullman.com/
+[6]:  https://raw.github.com/magomimmo/modern-cljs/tut-11/doc/images/form-idle.png
+[7]:  https://raw.github.com/magomimmo/modern-cljs/tut-11/doc/images/form-events.png
+[8]:  https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-06.md
+[9]:  https://github.com/lynaghk/c2.git
+[10]: https://github.com/lynaghk/c2/blob/master/README.markdown

@@ -91,10 +91,10 @@ In this tutorial we're going to finish the work started in the previus
 one by introducing mocks to manage the tests of CLJS compiler in the
 mutable world of the file system.
 
-## [Tutorial 11 - Handling events using Domina and Hiccups][20]
+## [Tutorial 11 - Handling events using Domina+Hiccups or c2][20]
 
 In this tutorial we get a brief insight in event handling by means of
-[domina library][13] and [hiccups][21].
+[domina library][13] and [hiccups][21] or the  [c2 library][22].
 
 # Appendices
 
@@ -142,3 +142,4 @@ License, the same as Clojure.
 [19]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-10.md
 [20]: https://github.com/magomimmo/modern-cljs/blob/tut-11/doc/tutorial-11.md
 [21]: https://github.com/teropa/hiccups
+[22]: https://github.com/lynaghk/c2.git

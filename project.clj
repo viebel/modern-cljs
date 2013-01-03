@@ -11,7 +11,10 @@
                  [compojure "1.1.3"]
                  ; domina dependency
                  [domina "1.0.0"]
-                 [hiccups "0.1.1"]]
+                 ; hiccups dependency
+                 [hiccups "0.1.1"]
+                 ; c2 dependency
+                 [com.keminglabs/c2 "0.2.1"]]
   :plugins [; cljsbuild plugin
             [lein-cljsbuild "0.2.9"]
             ; ring plugin

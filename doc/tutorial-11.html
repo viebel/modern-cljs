@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>tutorial-11.md</title>
+
+</head>
+
+<body>
+
+<h1>Tutorial 11 - Handling events using Domina+Hiccups and c2</h1>
+
+<p>In this tutorial we get a brief insight in event handling by means of
+<a href="https://github.com/levand/domina">domina library</a> and <a href="https://github.com/teropa/hiccups">hiccups</a> or the <a href="https://github.com/lynaghk/c2.git">c2 library</a>. Actually,
+<em>c2</em> is a declarative data visualization library which goes far beyond
+the usage presented here. We refer to next tutorials or the
+<a href="https://github.com/lynaghk/c2/blob/master/README.markdown">readme</a> for further details on data driven visualization with
+<em>c2</em>.</p>
+
+<h2>Introduction</h2>
+
+<p>Let's go back to the shopping calculator form introduced in
+<a href="https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-04.md">tutorial 04</a>, our aim is to enrich that form in order to provide
+some examples of events, handled with <a href="https://github.com/levand/domina">domina library</a>. Following
+Larry <a href="http://www.larryullman.com/">Larry Ullman</a> in
+<a href="http://www.larryullman.com/books/modern-javascript-develop-and-design/">Modern JavaScript: Development and Desing</a>, events can be
+distinguished in four cathegory: <em>input device</em> and <em>browser</em>, which
+will be further investigated here, and <em>keyboard</em> and <em>form</em>.</p>
+
+<p>At this point our login form is the following </p>
+
+<p><img src="https://raw.github.com/magomimmo/modern-cljs/tut-11/doc/images/form-idle.png" alt="Shopping Page" /></p>
+
+<p>and it is produced by the following HTML source <code>shopping-event.html</code></p>
+
+<p>```html
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Shopping Calculator</title>
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- shopping.html -->
+  <form action="" method="post" id="shoppingForm" novalidate>
+    <legend> Shopping Calculator</legend>
+    <fieldset>
+      <div>
+        <label for="quantity">Quantity</label>
+        <input type="number"
+               name="quantity"
+               id="quantity"
+               value="1"
+               min="1" required>
+      </div>
+      <div>
+        <label for="price">Price Per Unit</label>
+        <input type="text"
+               name="price"
+               id="price"
+               value="1.00"
+               required>
+      </div>
+      <div>
+        <label for="tax">Tax Rate (%)</label>
+        <input type="text"
+               name="tax"
+               id="tax"
+               value="0.0"
+               required>
+      </div>
+      <div>
+        <label for="discount">Discount</label>
+        <input type="text"
+               name="discount"
+               id="discount"
+               value="0.00" required>
+      </div>
+      <div>
+        <label for="total">Total</label>
+        <input type="text"
+               name="total"
+               id="total"
+               value="0.00">
+      </div> <br />
+      <br></p>
+
+<pre><code>  &lt;/br&gt;
+  &lt;div&gt;
+    &lt;input type="submit"
+           value="Calculate"
+           id="calculate"&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;input type="submit"
+           value="Reset"
+           id="reset"&gt;
+  &lt;/div&gt;
+&lt;/fieldset&gt;
+</code></pre>
+
+<p></form>
+  <script src="js/modern.js"></script>
+  <script>modern_cljs.shopping.init();</script>
+</body>
+</html>
+```</p>
+
+<h2>A mouseover/mouseout event</h2>
+
+<p>Together with the calculate and reset feature associated with the
+click, we want to add a mouseover/mousout event which print on the
+form the behavior of the buttons <em>Calcuate</em> and <em>Reset</em>, that is</p>
+
+<p><img src="https://raw.github.com/magomimmo/modern-cljs/tut-11/doc/images/form-events.png" alt="Shopping events" /></p>
+
+<p>To do this, we define the functions <code>addcalclauncher</code> and
+<code>addresetlauncher</code>, that handle the events associated with the
+calcuate and reset events of <em>Calcuate</em> and <em>Reset</em> buttons. The
+following code handles within a unique function the three
+behaviors concerning the <em>Calcuate</em> button.</p>
+
+<p>```clj
+(defn addcalclauncher []
+  (doall
+   [(evts/listen! (dom/by-id "calculate") :mouseover (fn [evt] (appendinfo)))
+    (evts/listen! (dom/by-id "calculate") :mouseout (fn [evt] (removeinfo)))
+    (evts/listen! (dom/by-id "calculate") :click  (fn [evt] (calculate)))]))</p>
+
+<p>(defn ^:export init []
+  (if (and js/document
+           (.-getElementById js/document))
+     (addcalclauncher)))
+```</p>
+
+<p>provided that we have included the domina library running</p>
+
+<p><code>clj
+(ns event-ex-one.reset
+    (:require [domina :as dom]
+              [domina.events :as evts]))
+</code></p>
+
+<p>Here <code>calculate</code> is the "calculator" routine specified in the previous
+tutorials. The functions <code>appendinfo</code>, <code>removeinfo</code> are responsible to
+the information printing on the form. To manipulate the underlining
+HTML we proceed as follows</p>
+
+<p>```cljs
+(defn appendinfo []
+  (dom/append! (xdom/xpath "//body/form") (hsc/html [:div {:id "txtcalc"} "Click to calculate"])))</p>
+
+<p>(defn removeinfo []
+  (dom/destroy! (dom/by-id "txtcalc")))
+```</p>
+
+<p>The <code>dom/append!</code> and <code>dom/destroy!</code> functions respectively add and
+delete a specified DOM element. A review of the specifications which
+can be passed to these function can be found in the
+<a href="https://github.com/levand/domina">domina readme</a>. Since <code>dom/append!</code> receives as second argument a
+string which contains the HTML code to be appended, we want to have a
+more "clojurish" approach to generate HTML code. To this aim, we use
+<a href="https://github.com/teropa/hiccups">hiccups library</a>. It provides the function <code>hsc/html</code> which
+return a string containing an HTML source code defined by a standard
+"hiccups" syntax (see <a href="https://github.com/teropa/hiccups">hiccups readme</a> for a complete review).</p>
+
+<p>Similary, we hook to the <em>Reset</em> buttons the similar events.</p>
+
+<p>```clj
+(defn addresetlauncher []
+  (doall
+   [(evts/listen! (dom/by-id "reset") :mouseover (fn [evt] (appendinfor)))
+    (evts/listen! (dom/by-id "reset") :mouseout (fn [evt] (removeinfor)))
+    (evts/listen! (dom/by-id "reset") :click  (fn [evt] (resetform)))]))</p>
+
+<p>;; the same as the previous sample
+(defn ^:export init []
+  (if (and js/document
+           (.-getElementById js/document))
+     (addresetlauncher)))
+```</p>
+
+<p>Here <code>reset</code> is the function that reset the form.</p>
+
+<p><code>clj
+(defn resetform []
+  (dom/set-value! (dom/by-id "total") "0.00")
+  (dom/set-value! (dom/by-id "price") "0.00")
+  (dom/set-value! (dom/by-id "tax") "0.0")
+  (dom/set-value! (dom/by-id "discount") "0.00")
+  (dom/set-value! (dom/by-id "quantity") "1") <br />
+  false)
+</code></p>
+
+<p>As shown in <a href="https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-06.md">tutorial 6</a>, to make the produced JavaScript actually
+runnable, we need to add in the HTML <code>shopping.html</code> the following
+lines</p>
+
+<p>```HTML</p>
+
+<script>modern_cljs.shopping.init();</script>
+
+<script>modern_cljs.reset.init();</script>
+
+<p>```</p>
+
+<blockquote>
+  <p>Since the events are hooked both to the DOM element and its
+response, there is no behavior difference between the bubble-phase
+and the capture-phase, anyway domina allows the user follow both the
+approaches.</p>
+</blockquote>
+
+<h2>Another approach for building the page</h2>
+
+<p>We have seen above how <a href="https://github.com/levand/domina">domina</a> and <a href="https://github.com/teropa/hiccups">hiccups</a> can be expolited
+for HTML pages manipulations. Anyway a different approach is possible,
+that is we can build an html page entirely in the ClojureScript code
+and declaring only a minimal skeleton in our HTML. To do so we employ
+the <a href="https://github.com/lynaghk/c2.git">c2 library</a>.</p>
+
+<p>The HTML page is now the following.</p>
+
+<p>```HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Shopping Calculator</title>
+    <!--[if lt IE 9]></p>
+
+<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+
+<p><![endif]-->
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <form action="" method="post" id="shoppingForm" novalidate></form> <br />
+  <script src="js/modern_dbg.js"></script>
+</body>
+</html>
+```</p>
+
+<p>and the shopping form can be initialized using the <code>bind!</code> macro of
+<code>c2.util</code>, which must be imported by the usual <code>use-macro</code>
+declaration.</p>
+
+<p>```clj
+(bind! "#shoppingForm"
+       [:form
+        [:legend "Shopping Calculator"]
+        [:fieldset
+         [:div [:label {:for "quantity"} "Quantity"
+                [:input#quantity {:type "number"
+                                  :name "quantity"
+                                  :value "1"
+                                  :min "1"
+                                  :required true}]]]
+         [:div [:label {:for "price"} "Price Per Unit"
+                [:input#price {:type "text"
+                               :name "price"
+                               :value "1.00"
+                               :required true}]]]
+         [:div [:label {:for "tax"} "Tax Rate (%)"
+                [:input#tax {:type "text"
+                             :name "tax"
+                             :value "0.0"
+                             :requried true}]]]
+         [:div [:label {:for "discount"} "Discount"
+                [:input#discount {:type "text"
+                                  :name "discount"
+                                  :value "0.0"
+                                  :required true}]]]
+         [:div [:label {:for "total"} "Total"
+                [:input#total {:type "text"
+                               :name "total"
+                               :value "0.00"
+                               :required true}]]]
+         [:div [:input#calculateButton {:type "button"
+                                         :value "Calculate"}]]
+         [:div [:input#resetButton {:type "button"
+                               :value "Reset"}]]]])</p>
+
+<p>```</p>
+
+<blockquote>
+  <p>Observe that the basic difference between this approach goes beyond
+the language we use to build a HTML page. Following this approach
+the actions associated with the DOM elements don't require to be
+initialized (see the <em>init</em> functions in the previous tutorials) and
+so, no CLJS functions must be exported, as we shall see below.</p>
+</blockquote>
+
+<p>We see now how the events discussed in the previous section can be
+handled with <em>c2</em>.</p>
+
+<h2>The mouseover/mouseout event with c2</h2>
+
+<p>We recall that we want to attach to the <em>Calculate</em> button a mouseover
+event which prints on the form some information about the behavior of
+the button, which must disappear when the mouse moves out the
+button. Similary for the <em>Reset</em> button.</p>
+
+<p>Here the code for the calculation</p>
+
+<p><code>cljs
+(c2event/on-raw "#calculateButton" :click calculate)
+(c2event/on-raw "#calculateButton" :mouseover (fn [] (add-info "#shoppingForm" "calculate")))
+(c2event/on-raw "#calculateButton" :mouseout (fn [] (remove-info "#calculate")))
+</code></p>
+
+<p>and the code for the reset action</p>
+
+<p><code>cljs
+(c2event/on-raw "#resetButton" :click reset-form)
+(c2event/on-raw "#resetButton" :mouseover (fn [] (add-info "#shoppingForm" "reset")))
+(c2event/on-raw "#resetButton" :mouseout (fn [] (remove-info "#reset")))
+</code></p>
+
+<p>where <code>calculate</code>, <code>reset</code>, <code>add-info</code> and <code>remove-info</code> are now defined as follow</p>
+
+<p>```cljs
+(defn calculate []
+  (let [quantity (c2dom/val "#quantity")
+        price (c2dom/val "#price")
+        tax (c2dom/val "#tax")
+        discount (dom/val "#discount")]
+    (c2dom/val "#total" (-> (* quantity price)
+                           (* (+ 1 (/ tax 100)))
+                           (- discount)
+                           (.toFixed 2)))))</p>
+
+<p>(defn reset-form []
+  (let [fields ["#quantity" "#price" "#tax" "#discount" "#total"]
+        init ["1" "1.00" "0.0" "0.0" "0.00"]]
+  (dorun (map c2dom/val fields init))))</p>
+
+<p>(defn add-info [el name]
+  (c2dom/append! el [:div {:id name} (str "Click to " name)]))</p>
+
+<p>(defn remove-info [el]
+  (c2dom/remove! el))
+```</p>
+
+<p>which are slightly different since they use the <em>c2 library</em> functions
+(actually those are not the only differences, we wanted to show other
+possible implementations).</p>
+
+<blockquote>
+  <p>As mentioned above, no ^:export tags must be provided.</p>
+</blockquote>
+
+</body>
+</html>
