@@ -129,4 +129,4 @@ provided by the *shoreleave-remote-ring* library.
 
 
 [1]: https://github.com/shoreleave/shoreleave-remote-ring.git
-[2]: https://raw.github.com/magomimmo/modern-cljs/tut-server/doc/images/shop-dia.png
+[2]: https://raw.github.com/magomimmo/modern-cljs/tut-server/doc/images/shop-diag.png
