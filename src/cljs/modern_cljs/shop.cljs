@@ -4,7 +4,7 @@
             [c2.dom :as dom]
             [c2.event :as event]))
 
-(defn calculate []
+(comment (defn calculate []
   (let [quantity (dom/val "#quantity")
         price (dom/val "#price")
         tax (dom/val "#tax")
@@ -66,4 +66,4 @@
 
 (event/on-raw "#resetButton" :click reset-form)
 (event/on-raw "#resetButton" :mouseover (fn [] (add-info "#shoppingForm" "reset")))
-(event/on-raw "#resetButton" :mouseout (fn [] (remove-info "#reset")))
+(event/on-raw "#resetButton" :mouseout (fn [] (remove-info "#reset"))) )

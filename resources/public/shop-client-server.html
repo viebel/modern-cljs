@@ -60,20 +60,19 @@
       <div>
         <input type="button"
                value="Calculate"
-               id="calculateButton">
+               id="buttonCalculate">
       </div>
 
       <div>
         <input type="button"
                value="Reset"
-               id="resetButton">
+               id="buttonReset">
       </div>
     </fieldset>
   </form>
-  <script src="js/modern_dev.js"></script>
+  <script src="js/modern_dbg.js"></script>
   <script>
-    modern_cljs.common.init_button('calculateButton', modern_cljs.shop_server.calculate_handler);
-    modern_cljs.commom.init_button('resetButton', modern_cljs.shop_server.reset_handler);
+    modern_cljs.shop_client.buttons_handler();
   </script>
 </body>
 </html>

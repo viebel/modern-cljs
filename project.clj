@@ -23,7 +23,7 @@
             ; ring plugin
             [lein-ring "0.7.5"]]
   ; ring tasks configuration
-  :ring {:handler modern-cljs.shop-server/app}
+  :ring {:handler modern-cljs.core/app}	
   ; cljsbuild tasks configuration
   :cljsbuild {:builds
               {
