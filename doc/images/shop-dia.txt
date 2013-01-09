@@ -2,3 +2,6 @@ title Server-Client Shopping Form
 
 Shopping Form\nCLJS->+Server\nCLJ: quantity, price ...
 Server\nCLJ-->-Shopping Form\nCLJS: total 
+
+Shopping Form\nCLJS->+Server\nCLJ: reset imput
+Server\nCLJ-->-Shopping Form\nCLJS: default values 
