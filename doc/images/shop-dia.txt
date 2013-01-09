@@ -1,4 +1,4 @@
-title Server-Cleint Shopping Form
+title Server-Client Shopping Form
 
 Shopping Form\nCLJS->+Server\nCLJ: quantity, price ...
 Server\nCLJ-->-Shopping Form\nCLJS: total 
