@@ -52,7 +52,7 @@ the `:compiler` keyword instructs CLS to save the compilation result
 in `"resources/public/js/modern.js`.
 
 I'm not going to explain every single detail of the CLJS/CLS pair of
-compilers. The only detail that is useful for investigation and
+compilers. The only detail that is useful for investigating and
 eventually solving the above issue is that the pair of
 compilers generates a **single** JS file
 (e.g. `"resources/public/js/modern.js"`) from **all** of the CLJS files
@@ -74,7 +74,7 @@ structures?
 From the above discussion the reader could infer that that CLJS is good only
 for a *single page browser application*. Indeed, there is a very modest solution
 to the above conflict between more calls setting the same `onload` property of
-the JS `window` object: duplication!
+the JS `window` object: code duplication!
 
 You have to duplicate the directory structure and the corresponding
 build options for each html page that is going to include the single
@@ -194,115 +194,7 @@ And here is the related fragment of `shopping.html`
   <script>modern_cljs.shopping.init();</script>
 ```
 
-> NOTE 3: See NOTE 2 above for an explanation of exposing
-> functions from CLJS to JS.
-
 You can now run everything as usual:
-
-```bash
-$ lein ring server # from the project home directory
-$ lein cljsbuild auto # from the project home directory in a new terminal
-$ lein trampoline cljsbuild repl-listen # from the project home directory in a new terminal
-```
-
-## A litle bit of abstrabction
-
-The careful reader will have noticed that the `init` function defined
-in the `modern-cljs.login` namespace and the one defined in the
-`modern-cljs.shopping` namespace are almost identical. They differ
-only in the form `id` and the function assigned to the `onsubmit`
-event. We can define a more general (i.e. abstracted) `init`
-function which, receiving both a form `id` and a function as argments,
-handles the implementation of both `init` function, and reduces code duplication.
-
-The abstracted `init` function, being common to both `login.cljs` and
-`shopping.cljs`, will be created in a new namespace, named
-`modern-cljs.common`.
-
-Create the `common.cljs` file in `src/cljs/modern-cljs` directory and
-write into it the following code.
-
-```clojure
-(ns modern-cljs.common)
-
-(defn ^:export init [form-id onload-fn]
-  ;; verify that js/document exists and that it has a getElementById
-  ;; property
-  (if (and js/document
-           (.-getElementById js/document))
-    ;; get loginForm by element id and set its onsubmit property to
-    ;; validate-form function
-    (let [form (.getElementById js/document form-id)]
-      (set! (.-onsubmit form) onload-fn))))
-```
-
-Now we need to update each html page and its associated CLJS
-code to reflect this change.
-
-Here is the related `login.html` fragment
-
-```html
-    <script src="js/modern.js"></script>
-    <script>
-      modern_cljs.common.init('loginForm', modern_cljs.login.validate_form);
-    </script>
-```
-
-> NOTE 4: CLS compiler translates "-" in "_". So
-> `modern-cljs.common.init` becomes `mondern_cljs.common.init` and
-> `modern-cljs.login.validate-form` becomes
-> `modern_cljs.login.validate_form`
-
-
-And here is the related `login.cljs` fragment
-
-```clojure
-(defn ^:export validate-form []
-  ;; get email and password element using (by-id id)
-  (let [email (by-id "email")
-        password (by-id "password")]
-    ;; get email and password value using (value el)
-    (if (and (> (count (value email)) 0)
-             (> (count (value password)) 0))
-      true
-      (do (js/alert "Please, complete the form!")
-          false))))
-```
-
-> NOTE 5: You need to `:export` the `validate-form` function name to
-> protect it from eventual CLS compiler renaming caused by the `:simple` or
-> the more aggressive `:advanced` optimization.
-
-Here is the related `shopping.html` fragment
-
-```html
-    <script src="js/modern.js"></script>
-    <script>
-      modern_cljs.common.init('shoppingForm', modern_cljs.shopping.validate_form);
-    </script>
-```
-
-> NOTE 6: See NOTE 4.
-
-And here is the related `shopping.cljs` fragment
-
-```clojure
-(defn ^:export calculate []
-  (let [quantity (value (by-id "quantity"))
-        price (value (by-id "price"))
-        tax (value (by-id "tax"))
-        discount (value (by-id "discount"))]
-    (set-value! (by-id "total") (-> (* quantity price)
-                                    (* (+ 1 (/ tax 100)))
-                                    (- discount)
-                                    (.toFixed 2)))
-    false))
-```
-
-> NOTE 7: See NOTE 5
-
-If you have not kept everything running in the terminals from our last
-session, you can restart everything as usual:
 
 ```bash
 $ lein ring server # from the project home directory
@@ -321,7 +213,7 @@ using the usual `lein-cljsbuild` plugin of `leiningen`.
 
 # License
 
-Copyright © Mimmo Cosenza, 2012. Released under the Eclipse Public
+Copyright © Mimmo Cosenza, 2012-2013. Released under the Eclipse Public
 License, the same as Clojure.
 
 [1]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-05.md
@@ -332,4 +224,3 @@ License, the same as Clojure.
 [6]: https://github.com/levand/domina#event-handling
 [7]: http://www.larryullman.com/books/modern-javascript-develop-and-design/
 [8]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-07.md
-

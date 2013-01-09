@@ -7,11 +7,10 @@ discover a trouble we do not know how to manage yet.
 ## Introduction
 
 In the [last tutorial][1] we came in contact with `:export` directive
-been attached to `init`, `validate-form` and `calulate` functions. That
-directive had the scope to protect the above functions from being
-evantually renamed by the Google Closure (CLS) compiler when used with
-more aggressive compilation mode than `:whitespace`, namely `:simple`
-and `:advanced`.
+been attached to `init` function. That directive had the scope to
+protect that function from being evantually renamed by the Google
+Closure (CLS) compiler when used with more aggressive compilation mode
+than `:whitespace`, namely `:simple` and `:advanced`.
 
 ## Being aggressive as all the others
 
@@ -25,14 +24,17 @@ process, by instructing `:cljsbuild` keyword with the following value:
 ...
 
 :cljsbuild {:builds
-              [{; clojurescript source code path
+              [{;; clojurescript source code path
                 :source-path "src/cljs"
-                ; Google Closure Compiler options
-                :compiler {; the name of emitted JS script file
+
+                ;; Google Closure Compiler options
+                :compiler {;; the name of emitted JS script file
                            :output-to "resources/public/js/modern.js"
-                           ; minimum optimization
+
+                           ;; minimum optimization
                            :optimizations :whitespace
-                           ; prettyfying emitted JS
+
+                           ;; prettyfying emitted JS
                            :pretty-print true}}]})
 ```
 
@@ -49,8 +51,8 @@ emitted JS code by the CLJS compiler. As a lot of others minifiers, it
 basically produces a minified JS code by simplifying expressions and
 renaming local variables within functions. Nothing very new.
 
-To activate `:simple` compilation mode, all you have to do is just
-change `:optmizations` value from `:whitespace` to `:simple`.
+To activate `:simple` compilation mode all you have to do is to change
+`:optmizations` value from `:whitespace` to `:simple`.
 
 Instead of just substituting `:simple` directive to the `:whitespace`
 one, as documentated in [sample.project.clj][2], `lein-cljsbuild` is so
@@ -65,40 +67,48 @@ named `:pre-prod`, which uses `:simple` compilation mode.
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  ; clojure source code path
+
+  ;; clojure source code path
   :source-paths ["src/clj"]
+
   :dependencies [[org.clojure/clojure "1.4.0"]
-                 ; compojure dependency
                  [compojure "1.1.3"]
-                 ; domina dependency
                  [domina "1.0.0"]]
+
   :plugins [; cljsbuild plugin
-            [lein-cljsbuild "0.2.9"]
-            ; ring plugin
+            [lein-cljsbuild "0.2.10"]
             [lein-ring "0.7.5"]]
-  ; ring tasks configuration
+
+  ;; ring tasks configuration
   :ring {:handler modern-cljs.core/handler}
-  ; cljsbuild tasks configuration
+
+  ;; cljsbuild tasks configuration
   :cljsbuild {:builds
               {
                :dev
-               {; clojurescript source code path
+               {;; clojurescript source code path
                 :source-path "src/cljs"
-                ; Google Closure Compiler options
-                :compiler {; the name of emitted JS script file
+
+                ;; Google Closure Compiler options
+                :compiler {;; the name of emitted JS script file
                            :output-to "resources/public/js/modern_dbg.js"
-                           ; minimum optimization
+
+                           ;; minimum optimization
                            :optimizations :whitespace
-                           ; prettyfying emitted JS
+
+                           ;; prettyfying emitted JS
                            :pretty-print true}}
                :pre-prod
-               {; same path as above
+               {;; same path as above
                 :source-path "src/cljs"
-                :compiler {; different output name
+
+                :compiler {;; different output name
                            :output-to "resources/public/js/modern_pre.js"
-                           ; simple optmization
+
+                           ;; simple optmization
                            :optimizations :simple
-                           ; no need prettyfication
+
+                           ;; no need prettyfication
                            }}}})
 
 ```
@@ -167,31 +177,37 @@ code snippet.
   :cljsbuild {:builds
               {
                :dev
-               {; clojurescript source code path
+               {;; clojurescript source code path
                 :source-path "src/cljs"
-                ; Google Closure Compiler options
-                :compiler {; the name of emitted JS script file
+
+                ;; Google Closure Compiler options
+                :compiler {;; the name of emitted JS script file
                            :output-to "resources/public/js/modern_dbg.js"
-                           ; minimum optimization
+
+                           ;; minimum optimization
                            :optimizations :whitespace
-                           ; prettyfying emitted JS
+
+                           ;; prettyfying emitted JS
                            :pretty-print true}}
                :prod
-               {; clojurescript source code path
+               {;; clojurescript source code path
                 :source-path "src/cljs"
-                ; Google Closure Compiler options
-                :compiler {; the name of emitted JS script file
+
+                ;; Google Closure Compiler options
+                :compiler {;; the name of emitted JS script file
                            :output-to "resources/public/js/modern.js"
-                           ; advanced optimization
+
+                           ;; advanced optimization
                            :optimizations :advanced}}
                :pre-prod
-               {; some path as above
+               {;; some path as above
                 :source-path "src/cljs"
-                :compiler {; different output name
+                :compiler {;; different output name
                            :output-to "resources/public/js/modern_pre.js"
-                           ; simple optmization
+
+                           ;; simple optmization
                            :optimizations :simple
-                           ; no need prettyfication
+                           ;; no need prettyfication
                            }}}})
 
 ```
@@ -243,7 +259,7 @@ Now edit `login-dbg.htnl`, `login-pre.html`, `shopping-dbg.html` and
 ...
     <script src="js/modern_dbg.js"></script>
     <script>
-      modern_cljs.common.init('loginForm', modern_cljs.login.validate_form);
+      modern_cljs.login.init();
     </script>
 </body>
 </html>
@@ -264,7 +280,7 @@ Now edit `login-dbg.htnl`, `login-pre.html`, `shopping-dbg.html` and
 
     <script src="js/modern_pre.js"></script>
     <script>
-      modern_cljs.common.init('loginForm', modern_cljs.login.validate_form);
+      modern_cljs.login.init();
     </script>
 </body>
 </html>
@@ -285,7 +301,7 @@ Now edit `login-dbg.htnl`, `login-pre.html`, `shopping-dbg.html` and
 
   <script src="js/modern_dbg.js"></script>
   <script>
-    modern_cljs.common.init('shoppingForm', modern_cljs.shopping.calculate);
+    modern_cljs.shopping.init();
   </script>
 </body>
 </html>
@@ -306,7 +322,7 @@ Now edit `login-dbg.htnl`, `login-pre.html`, `shopping-dbg.html` and
 
   <script src="js/modern_pre.js"></script>
   <script>
-    modern_cljs.common.init('shoppingForm', modern_cljs.shopping.calculate);
+    modern_cljs.shopping.init();
   </script>
 </body>
 </html>
@@ -339,7 +355,7 @@ and testing phases, but for security reasons it would be better not to
 have it in a production envirinoment. Aside from the fact that, as we
 have just seen, the `:advanced` compilation mode left hanging the brepl
 connection, it would be nice to have a way to explicitly **exclude** the
-`connect.cljs` file contening the connection call from the build
+`connect.cljs` file containing the connection call from the build
 (i.e. `:prod`) dedicated to the production environment. Sadly, both
 [`lein-cljsbuild`][6] and [`clojurescript`][7] do not offer this kind of
 feature and, more generally, the eventuality to exclude any CLJS file
@@ -350,15 +366,21 @@ same CLJS code base (i.e. `:source-path "src/cljs"`) and simultaneously
 have more builds that differently filter the code base istself, causing
 a maintenance headache due to code duplication.
 
-# Next step - Learn by contributing
+> FINAL NOTE: Me and my students Federico Boniardi and Francesco Agozzino
+> patched `lein-cljsbuild` to extend its build options in such a way that
+> it's able to exclude CLJS files-or-dirs from been compiled. As soon as
+> we have time to submit the patch, we hope it will be merged in a next
+> `lein-cljsbuild` release.
 
-In the [next tutorial][9] we're going to learn how to patch CLJ/CLJS for solving 
-the code duplication trouble we have just met.
+# Next step - Introducing Domina events.
 
+In the next [Tutorial 8][9] we're going to introduce domina events
+which, by wrapping Google Closure Library event management, allows to
+follow a more clojure-ish approach in handing DOM events.
 
 # License
 
-Copyright © Mimmo Cosenza, 2012. Released under the Eclipse Public
+Copyright © Mimmo Cosenza, 2012-13. Released under the Eclipse Public
 License, the same as Clojure.
 
 [1]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-06.md

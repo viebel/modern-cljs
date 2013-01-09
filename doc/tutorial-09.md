@@ -1,501 +1,359 @@
-# Tutorial 9 - It'a better to be safe than sorry (Part 1)
+# Tutorial 09 - DOM manipulation
 
-In this Part 1 of the tutorial we're going to learn a little bit about
-testing. We'll use,  as a real case, the CLJ code we impelemented in the
-[previous tutorial][1] to patch CLJS compiler. We'll stop when we'll
-meet the barier of the mutable world which will be discussed in Part 2
-of this tutorial.
+In the [last tutorial][1] we introduced `domina.events` namespace to
+make our events management a little bit more clojure-ish than just
+using CLJS/JS interop. In this tutorial we'are going to face the need
+to programmatically manipulate DOM elements as a result of the
+occurrence of some DOM events (e.g. `mouseover`, `mouseout`, etc.).
 
-> NOTE 1: Sorry for the content of this tutorial not being specifically
-> dedicated to CLJS. But I think that most of the considerations about
-> testing are common to both sides of the creek. And sorry for having
-> broken the content in two parts. It was too long to stay in a single
-> unit of my own attention time.
+# Introduction
 
-## Introduction
+As we already saw, [domina library][2] has a lot to offer for managing
+the selection of DOM elements and for handling almost any DOM
+event. Let's go on by using it to verify how it could help us in
+managing the manipulation of DOM elements, which is one of the most
+important feature of any good JS library and/or framework.
 
-In the last tutorial dedicated to patch CLJS compiler we have updated
-three functions (i.e. `compile-dir`, `compile-root` and `cljs-files-in`)
-and introduced a new one (i.e. `exclude-file-names`).
+To reach this goal, we're going to use again our old shopping
+calculator example by adding to its `Calculate` button both a
+`mouseover` and a `mouseout` event handlers.  The `mouseover` handler
+reacts by adding "Click to calculate" to the form itself. The
+`mouseout` handler, instead, reacts by deleting that text.  Yes, I
+know, the requirement is very stupid but, as you will see, pretty
+representative of a kind of problem you're going to face again and
+again in yuor CLJS programming.
 
-All these code changes have been done trying to respect the *interface*
-of each original function in such a way that any previous code written
-against those functions would still work without generating any errors.
+# Mouseover event
 
-This is the scenario I prefer for testing. A lot of code already uses
-the component you have to patch and that code has to continue to run
-transparently, that means as expected and without errors. At the same
-time, any new feature you added has to work as expected and, again,
-without errors.
+Let's start by adding a `mouseover` handler to the `Calculate`
+button. The first step is to write a function, named `add-help`, which
+appends a `div` and the *Click to calculate* inner text to the end of
+the `shoppingForm` DOM node. To do that, we're are going to experience
+the domina library by using its `append!` function from `domina`
+namespace. The documentation attached to `append!` function says that:
 
-Easy to promise and impossibile to demonstrate. The interval between the
-easiness of promising and the impossibility of demonstrating is the room
-for testing. You can get crazy by trying to fill up the entire space, or
-you can just touch its surface. Testing is like securing. You spend
-proportionally to the value you assign at yourself becoming sorry when
-something will eventually go wrong.
+> Given a parent and child contents, appends each of the children to all
+> of the parents. If there is more than one node in the parent content,
+> clones the children for the additional parents. Returns the parent
+> content.
 
-## Where to start from
-
-In deciding what to test, we have more options.
-
-In the top-down approach you start testing the most *external
-interfaces/functions* and eventually dive into more internal functions
-to be tested as well.
-
-In the bottom-up approach you start testing from more *internal
-interface/functions* to eventually fly up towards more external
-functions.
-
-You can even start from functions floating in the middle of the space
-and postpone later the decision on flying up or diving down.
-
-## Our bottom
-
-Regarding the patch we did in the previous tutorial, we consider the
-bottom being `exclude-file-names`, the only new function we added in
-patching the compiler. Its scope is to calculate the set of all the CLJS
-files to be escluded from a build.
-
-I don't know about you, but I always prefer to start from testing
-extreme scenarios and next testing more standard use cases. Here are
-some extreme `exclude-file-names` sample calls.
+And here is a simple example of `append!` usage from [domina readme][3].
 
 ```clojure
-;;; extreme samples
-
-(exclude-file-names nil nil)
-(exclude-file-names nil [])
-(exclude-file-names nil [""])
-(exclude-file-names nil [" "])
-(exclude-file-names "src/cljs" nil)
-(exclude-file-names "src/cljs" [])
-(exclude-file-names "src/cljs" [""])
-(exclude-file-names "src/cljs" "")
+;;; from domina readme.md
+(append! (xpath "//body") "<div>Hello world!</div>")
 ```
 
-What should those calls return? An empty set (i.e. `#{}`), or *the not a
-value* `nil`? My personal opinion is that a `nil` return value is surely
-better in all cases in which there is a `nil` argument. But what about
-the others samples: `(exclude-file-names "src/cljs" [])` and
-`(exclude-file-names "src/cljs" [""])` should return `#{}`;
-`(exclude-file-names "src/cljs" "")` should return an error, I believe.
+which appends a `div` node to the end of the `body` node. It uses
+`xpath` to select a single parent (i.e. `body`) and a `string` to
+represent a single `div` child to be added to the parent.
 
-## The repl as a manual testing tool
+I don't know about you, but I don't feel to be at home with `xpath`
+and I limit myself to use it just where CSS selector will fail
+(e.g. ancestor selection) or become to complex to be managed and/or
+maintened.
 
-The beauty of a repl is that you can interact with those samples.
+Anyway, domina offers you three options for nodes selection:
 
-### Open the door
+* `xpath` from `domina.xpath` namespace
+* `sel` from `domina.css` namespace
+* `by-id` and `by-class` from `domina` namespace
 
-Be sure, if it's not already been done, to set `$CLOJURESCRIPT_HOME` to
-the patched CLJS compiler and to set `$PATH` to
-`$CLOJURESCRIPT_HOME/bin`.
+Thankfully `append!` accepts, as a first argument, any domina
+expression which returns one or more `content` (i.e. one or more DOM
+node). This means that, for such a stupid case, we can safely use
+`by-id` selector to select the parent to be passed to `append!`.
+
+Here is the `add-help` definition to be added to `shopping.cljs` file.
+
+```clojure
+(defn add-help []
+  (dom/append! (dom/by-id "shoppingForm")
+               "<div class='help'>Click to calculate</div>"))
+```
+
+> NOTE 1: we added `class='help'` attribute to the appended `div` in
+> such a way that we can later delete it.
+
+We can now add `add-help` handler to the `mouseover` event of the
+`calc` button like so:
+
+```clojure
+(defn ^:export init []
+  (when (and js/document
+             (.-getElementById js/document))
+    (ev/listen! (dom/by-id "calc") :click calculate)
+    (ev/listen! (dom/by-id "calc") :mouseover add-help)))
+```
+
+If you now compile, run and visit [`shopping-dbg.html`][4] page 
 
 ```bash
-$ export CLOJURESCRIPT_HOME = path/to/modern-cljs/compiler/clojurescript
-$ export PATH = $CLOJURESCRIPT_HOME/bin:$PATH
+$ lein ring server # from modern-cljs home dir
+$ lein cljsbuild auto dev # from modern-cljs home in a new terminal
 ```
 
-### Start the engine
+you will see that every time you move your mouse over the `Calculate`
+button, a new text saying *Click to calculate* is going be added to
+the end of the shopping calculator form.
 
-Launch the repl.
+![Shopping calculator][5]
+
+## Mouseout event
+
+What we now need is a way to delete that text anytime the mouse moves
+out of the `Calculate` button. Thankfully, `domina.events` namespace
+support `mouseout` event as well.
+
+We need to define a new function, named `remove-help`, which, by using
+`destroy!`  fuction from  `domina` namespace,  deletes the  `div` node
+previously added  by `add-help`  to the form.  Next we need  to attach
+that function to the `mouseout`  event of the `Calculate` button. Here
+is the complete `shopping.cljs` source file.
+
+```clojure
+(ns modern-cljs.shopping
+  (:require [domina :as dom]
+            [domina.events :as ev]))
+
+(defn calculate []
+  (let [quantity (dom/value (dom/by-id "quantity"))
+        price (dom/value (dom/by-id "price"))
+        tax (dom/value (dom/by-id "tax"))
+        discount (dom/value (dom/by-id "discount"))]
+    (dom/set-value! (dom/by-id "total") (-> (* quantity price)
+                                            (* (+ 1 (/ tax 100)))
+                                            (- discount)
+                                            (.toFixed 2)))))
+
+(defn add-help []
+  (dom/append! (dom/by-id "shoppingForm")
+               "<div class='help'>Click to calculate</div>"))
+
+(defn remove-help []
+  (dom/destroy! (dom/by-class "help")))
+
+(defn ^:export init []
+  (when (and js/document
+             (.-getElementById js/document))
+    (ev/listen! (dom/by-id "calc") :click calculate)
+    (ev/listen! (dom/by-id "calc") :mouseover add-help)
+    (ev/listen! (dom/by-id "calc") :mouseout remove-help)))
+```
+
+If you have not killed the previous automatic recompilation
+command (i.e. `$ lein cljsbuild auto dev`), you just need to reload
+the `shopping-dbg.html` page to see the effect of `mouseover/mouseout`
+pair of events by moving the mouse cursor in and out of the
+`Calculate` button.
+
+# If you are like me
+
+I have to admit to be very bad both in HTML and in CSS coding and I
+always prefer to have a professional designer available to do that
+job.
+
+If you're like me, you would not want to code any HTML/CSS fragment as
+a string like we did when we manipulated the DOM by adding a `div` to
+the `shoppingForm` form.
+
+If there is a thing that I don't like about domina library is that it
+requires the child/children argument to be passed to `append!`, and to
+otherr DOM manipulation functions, as a string containing a true HTML
+fragment, not a CLJ data structure. That's why I searched around to
+see if someone else, having my same pain, solved it.
+
+## hiccups
+
+The first CLJS library I found to relieve my pain was
+[hiccups][6]. It's just an incomplete port of [hiccup][7] on CLJS. It
+uses vectors to represent tags and maps to represent a tag's
+attrbutes.
+
+Here are some basic documented examples of hiccups usage:
+
+```clojure
+(html [:span {:class "foo"} "bar"])
+;; emits "<span class=\"foo\">bar</span>"
+
+(html [:script])
+;; emits "<script></script>"
+
+(html [:p])
+;; emits "<p/>
+```
+
+hiccups also provides a CSS-like shortcut for denoting `id` and
+`class` attribute
+
+```clojure
+(html [:div#foo.bar.baz "bang"])
+;; emits "<div id=\"foo\" class=\"bar baz\">bang</div>"
+```
+
+which brings us to solve our problem of representing the string `"<div
+class=/"help/">Click to calculate</div>"` as CLJ data structures to be
+passed to `append!` function
+
+```clojure
+(html [:div#.help "Click to calculate"])
+```
+
+We are now ready to use hiccups by:
+
+* add hiccups to `project.clj` dependencies
+* require `hiccups.core` macro namespace
+* use hiccups syntax to generate the HTML string to be passed to
+  domina `append!` function
+  
+Here is the complete `project.cljs` which now includes the hiccups
+dependency
+
+```clojure
+(defproject modern-cljs "0.1.0-SNAPSHOT"
+  :description "FIXME: write description"
+  :url "http://example.com/FIXME"
+  :license {:name "Eclipse Public License"
+            :url "http://www.eclipse.org/legal/epl-v10.html"}
+  :min-lein-version "2.0.0"
+
+  ;; clojure source code path
+  :source-paths ["src/clj"]
+
+  :dependencies [[org.clojure/clojure "1.4.0"]
+                 [compojure "1.1.3"]
+                 [domina "1.0.0"]
+                 [hiccups "0.1.1"]]
+
+  :plugins [[lein-cljsbuild "0.2.10"]
+            [lein-ring "0.7.5"]]
+
+  ;; ring tasks configuration
+  :ring {:handler modern-cljs.core/handler}
+
+  ;; cljsbuild tasks configuration
+  :cljsbuild {:builds
+              {:dev
+               {;; clojurescript source code path
+                :source-path "src/cljs"
+
+                ;; Google Closure Compiler options
+                :compiler {;; the name of emitted JS script file
+                           :output-to "resources/public/js/modern_dbg.js"
+
+                           ;; minimum optimization
+                           :optimizations :whitespace
+                           ;; prettyfying emitted JS
+                           :pretty-print true}}
+               :pre-prod
+               {;; same path as above
+                :source-path "src/cljs"
+
+                :compiler {;; different JS output name
+                           :output-to "resources/public/js/modern_pre.js"
+
+                           ;; simple optimization
+                           :optimizations :whitespace}}
+               :prod
+               {;; same path as above
+                :source-path "src/cljs"
+
+                :compiler {;; different JS output name
+                           :output-to "resources/public/js/modern.js"
+
+                           ;; advanced optimization
+                           :optimizations :advanced}}
+               }})
+```
+
+And here is the updated `shopping.cljs` source file.
+
+```clojure
+(ns modern-cljs.shopping
+  (:require-macros [hiccups.core :as h])
+  (:require [domina :as dom]
+            [domina.events :as ev]))
+
+(defn calculate []
+  (let [quantity (dom/value (dom/by-id "quantity"))
+        price (dom/value (dom/by-id "price"))
+        tax (dom/value (dom/by-id "tax"))
+        discount (dom/value (dom/by-id "discount"))]
+    (dom/set-value! (dom/by-id "total") (-> (* quantity price)
+                                            (* (+ 1 (/ tax 100)))
+                                            (- discount)
+                                            (.toFixed 2)))))
+
+(defn add-help []
+  (dom/append! (dom/by-id "shoppingForm")
+               (h/html [:div.help "Click to calculate"])))
+
+(defn remove-help []
+  (dom/destroy! (dom/by-class "help")))
+
+(defn ^:export init []
+  (when (and js/document
+             (.-getElementById js/document))
+    (ev/listen! (dom/by-id "calc") :click calculate)
+    (ev/listen! (dom/by-id "calc") :mouseover add-help)
+    (ev/listen! (dom/by-id "calc") :mouseout remove-help)))
+```
+
+> NOTE 2: this is the first time we met macros in CLJS. CLJS macros
+> are written in CLJ and are referenced via the `:require-macros`
+> keyword in the namespace declaration where the `:as` prefix is
+> required. It has to be noted that the code generated by macros must
+> target the capability of CLJS (see [Difference from Clojure][8])
+
+We're now happy with what we reached by using domina and hiccups to
+make our shopping calculator sample as clojure-ish as possibile. The
+only thing that still hurts me is the `.-getElementById` interop call
+in the `init` function which can be very easly removed by just using
+`aget` like so:
+
+```clojure
+(defn ^:export init []
+  (when (and js/document
+             (aget js/document "getElementById"))
+    (ev/listen! (dom/by-id "calc") :click calculate)
+    (ev/listen! (dom/by-id "calc") :mouseover add-help)
+    (ev/listen! (dom/by-id "calc") :mouseout remove-help)))
+```
+
+Update the `shopping.cljs` source file as above, save it, clean and
+recompile everything and finnaly run the project as usual
 
 ```bash
-$ cd $CLOJURESCRIPT_HOME
-$ ./script/repl
-Clojure 1.4.0
+$ lein cljsbuild clean # from modern-cljs home dir
+$ lein clean
+$ lein cljsbuild once
+$ lein ring server 
+$ lein trampoline cljsbuils repl-listen # from modern home dir in a new terminal
 ```
 
-### Set the double traction factor
+Next visit [`shopping-dbg.html`][4], [`shopping-pre.html`][9] and
+[`shopping.html`][10] to verify that all the builds still work.
 
-Require `cljs.compiler` namespace
+As homework I suggest you to modify `login.cljs` accordingly to
+the approach used for `shopping.cljs` in this and in the
+[previous tutorial][1].
 
-```clojure
-user=> (require '[cljs.compiler :as comp])
-nil
-user=>
-```
+# Next step - TO BE DONE
 
-### Gas
-
-Evaluate some extreme calls
-
-```clojure
-user=> (comp/exclude-file-names nil nil)
-#{}
-user=> (comp/exclude-file-names nil [])
-#{}
-user=> (comp/exclude-file-names nil [""])
-
-```
-
-## We were bad
-
-Those answears are not the ones I would expect. Before start fixing the
-implementation of `exclude-file-names` function, remember you're risking
-to repeat the evaluations of those samples of calls more and more times
-in the repl. We need a little bit of automation to not get bored and not
-have to remember all the calls to test on each little improvement cycle.
-
-## I know, it's boring
-
-The definition of tests is the role of the `clojure.test` namespace
-which we're going to `require`. Next, by using `deftest` and `is`
-macros, we'll define the tests to be finally executed by `run-tests`.
-
-```clojure
-user=> (require '[clojure.test :as test])
-nil
-user=> (test/deftest test-exclude-file-names (test/is (= nil (comp/exclude-file-names nil nil))))
-#'user/test-exclude-file-names
-user=> (test/run-tests)
-
-Testing user
-
-FAIL in (test-exclude-file-names) (NO_SOURCE_FILE:6)
-expected: (= nil (comp/exclude-file-names nil nil))
-  actual: (not (= nil #{}))
-
-Ran 1 tests containing 1 assertions.
-1 failures, 0 errors.
-{:type :summary, :pass 0, :test 1, :error 0, :fail 1}
-user=>
-```
-
-As you can see, the test failed because the expected value `nil` is
-different from the actual value `#{}`.
-
-## But it could help
-
-A simple variation of the implementation of `exclude-file-names` will
-match our early expectations.
-
-```clojure
-(defn exclude-file-names
-  "Return a set of absolute paths of files to be excluded"
-  [dir exclude-vec]
-  (when (and dir exclude-vec)
-    (set (filter #(.endsWith ^String % ".cljs")
-                 (map #(.getAbsolutePath ^java.io.File %)
-                      (mapcat #(file-seq (io/file (str dir java.io.File/separator %)))
-                              exclude-vec))))))
-```
-
-If you now evaluate the new definition in the repl and call
-`(run-tests)` again, you'll pass the first test.
-
-```clojure
-user=> (in-ns 'cljs.compiler)
-#<Namespace cljs.compiler>
-cljs.compiler=> (defn exclude-file-names [dir exclude-vec]
-                   (when (and dir exclude-vec)
-                      (set (filter #(.endsWith ^String % ".cljs")
-                                   (map #(.getAbsolutePath ^java.io.File %)
-                                        (mapcat #(file-seq (io/file (str dir java.io.File/separator %)))
-                                                exclude-vec))))))
-#'cljs.compiler/exclude-file-names
-cljs.compiler=> (in-ns 'user)
-#<Namespace user>
-user=> (test/run-tests)
-
-Testing user
-
-Ran 1 tests containing 1 assertions.
-0 failures, 0 errors.
-{:type :summary, :pass 1, :test 1, :error 0, :fail 0}
-user=>
-```
-
-## It's still boring
-
-If you're going to cover a good extension of test cases, you'll find
-yourself writing almost the same thing again and again. You then start
-cutting and pasting around and you probably finish by having trouble
-with a bug caused by a wrong cut and/or paste somewhere.
-
-## Being plural
-
-To moderate the boringness, `clojure.tests` namespace defines the `are`
-macro which allows you to group, in a single unit, all test cases for a
-function by reducing repetitions. We start from three simple assertions:
-
-* `nil` is the expected result of calling `(exclude-file-names nil nil)`
-* `nil` is the expected result of calling `(exclude-file-names nil [])`
-* `nil` is the expected result of calling `(exclude-file-names nil [""])`
-
-Now, using the `are` macro, redefine `test-exclude-file-names` in the
-repl and re-execute `(run-tests)`
-
-```clojure
-user=> (test/deftest test-exclude-file-names
-          (test/are [result call] (= result call)
-             nil (comp/exclude-file-names nil nil)
-             nil (comp/exclude-file-names nil [])
-             nil (comp/exclude-file-names nil [""])))
-#'user/test-exclude-file-names
-user=> (test/run-tests)
-
-Testing user
-
-Ran 1 tests containing 3 assertions.
-0 failures, 0 errors.
-{:type :summary, :pass 3, :test 1, :error 0, :fail 0}
-user=>
-```
-## Again and again
-
-Now that you know enough of the `clojure.test` namespace, it's time to
-see where to save those tests in the file system in such a way that we
-could reuse them again and again.
-
-Here is the structure of the `src` directory of `$CLOJURESCRIPT_HOME`.
-
-![src directory][2]
-
-You need to have this same structure in the `test` directory of
-`$CLOJURESCRIPT_HOME` by adding `clj/cljs` as follows:
-
-```bash
-$ cd $CLOJURESCRIPT_HOME
-$ mkdir -p test/clj/cljs
-$
-```
-
-Now create the `compiler_test.clj` file in the just created
-`test/clj/cljs` directory and save it after having coded the following
-content.
-
-```clojure
-(ns cljs.compiler-test
-  (:require [clojure.test :as t]
-            [cljs.compiler :as c]))
-
-(t/deftest test-exclude-file-names
-  (t/are [result call] (= result call)
-       nil (c/exclude-file-names nil nil)
-       nil (c/exclude-file-names nil [])
-       nil (c/exclude-file-names nil [""])))
-```
-
-> NOTE 1: notice the corrispondance between the `cljs.compiler-test`
-> namespace and its file pathname
-> `$CLOJURESCRIPT_HOME/src/test/clj/cljs/compiler_test.clj`.
-
-Try now to launch a new repl and then require the `cljs.compiler-test`
-namespace to execute `run-tests`.
-
-```bash
-$ cd $CLOJURESCRIPT_HOME
-$ ./script/repl
-Clojure 1.4.0
-user=> (require '[cljs.compiler-test :as c])
-FileNotFoundException Could not locate cljs/compiler_test__init.class or cljs/compiler_test.clj on classpath: ....
-user=> (use 'cljs.compiler-test)
-FileNotFoundException Could not locate cljs/compiler_test__init.class or cljs/compiler_test.clj on classpath: ....
-user=>
-```
-
-## Another patch?
-
-Opps, `FileNotFoundException`. That's bad. It means that the JVM
-classpath is not aware of `test/clj` source directory where
-`cljs/compiler_test.clj` lives. Take now a look at the `script/repl`
-script and you'll discover that `test/clj` is not set in the JVM
-classpath. Add it as follows.
-
-```bash
-#!/bin/sh
-
-if [ "$CLOJURESCRIPT_HOME" = "" ]; then
-  CLOJURESCRIPT_HOME="`dirname $0`/.."
-fi
-
-CLJSC_CP=''
-for next in lib/*: src/clj: src/cljs: test/cljs: test/clj; do
-  CLJSC_CP="${CLJSC_CP}${CLOJURESCRIPT_HOME}/${next}"
-done
-
-java -server -cp "$CLJSC_CP" clojure.main
-```
-
-## Run the test
-
-You can know retry the run.
-
-```clojure
-$ ./script/repl
-Clojure 1.4.0
-user=> (require '[clojure.test :as t])
-nil
-user=> (require '[cljs.compiler-test :as c])
-nil
-user=> (t/run-tests 'cljs.compiler-test)
-
-Testing cljs.compiler-test
-
-Ran 1 tests containing 3 assertions.
-0 failures, 0 errors.
-{:type :summary, :pass 3, :test 1, :error 0, :fail 0}
-user=>
-```
-
-Great. All the initial test assertions passed. After a bit of efforts we
-discovered how to launch the tests in the repl to protect ourselves from
-becoming sorry for not having done a decent job.
-
-## Go ahead and stop again
-
-I'm not going to explain every single assertion eventually used to test
-`exclude-file-names`, but sooner or later you start asserting things in
-the mutable world of the file system.
-
-To test our `exclude-file-names` function on a real scenario we're
-initially going to use the CLJS code base itself as our mutable world.
-
-This time we start coding from the test. Open `compile_test.clj` and add some
-reasonable assertions to `test-exclude-file-names`.
-
-```clojure
-(ns cljs.compiler-test
-  (:require [clojure.test :as t]
-            [cljs.compiler :as c]))
-
-(t/deftest test-exclude-file-names
-  (t/are [x y] (= x y)
-       nil (c/exclude-file-names nil nil)
-       nil (c/exclude-file-names nil [])
-       nil (c/exclude-file-names nil [""])
-       nil (c/exclude-file-names "src/cljs" nil)
-       #{} (c/exclude-file-names "src/cljs" [])
-       #{} (c/exclude-file-names "src/cljs" [""])
-       #{} (c/exclude-file-names "src/cljs" ["non_existent_file.cljs"])
-       #{} (c/exclude-file-names "src/cljs" ["non_existent_directory"])
-       #{} (c/exclude-file-names "src/cljs" ["non_existent_file.cljs" "non_existent_directory"])
-       #{} (c/exclude-file-names "src/cljs" ["cljs/non_existent_file.cljs"])
-       #{} (c/exclude-file-names "src/cljs" ["cljs/non_existent_directory"])
-       #{} (c/exclude-file-names "src/cljs" ["cljs/non_existent_file.cljs" "cljs/non_existent_directory"])
-       ))
-```
-
-Launch the repl as before (i.e. `$ ./script/repl`) and require both
-`clojure.test` and `cljs.compiler-test`. Finally run the tests.
-
-```clojure
-Clojure 1.4.0
-user=> (require '[clojure.test :as t])
-nil
-user=> (require '[cljs.compiler-test :as c])
-nil
-user=> (t/run-tests)
-
-Testing user
-
-Ran 0 tests containing 0 assertions.
-0 failures, 0 errors.
-{:type :summary, :pass 0, :test 0, :error 0, :fail 0}
-user=> (t/run-tests 'cljs.compiler-test)
-
-Testing cljs.compiler-test
-
-FAIL in (test-exclude-file-names) (compiler_test.clj:6)
-expected: (= #{} (c/exclude-file-names "src/cljs" [""]))
-  actual: (not (= #{} #{"/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/cljs/nodejs.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/cljs/nodejscli.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/browser/event.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/data.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/walk.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/cljs/reader.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/cljs/core.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/set.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/zip.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/reflect.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/browser/repl.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/browser/dom.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/string.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/core/reducers.cljs" "/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/clojure/browser/net.cljs"}))
-
-FAIL in (test-exclude-file-names) (compiler_test.clj:6)
-expected: (= #{} (c/exclude-file-names "src/cljs" ["non_existent_file.cljs"]))
-  actual: (not (= #{} #{"/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/non_existent_file.cljs"}))
-
-FAIL in (test-exclude-file-names) (compiler_test.clj:6)
-expected: (= #{} (c/exclude-file-names "src/cljs" ["non_existent_file.cljs" "non_existent_directory"]))
-  actual: (not (= #{} #{"/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/non_existent_file.cljs"}))
-
-FAIL in (test-exclude-file-names) (compiler_test.clj:6)
-expected: (= #{} (c/exclude-file-names "src/cljs" ["cljs/non_existent_file.cljs"]))
-  actual: (not (= #{} #{"/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/cljs/non_existent_file.cljs"}))
-
-FAIL in (test-exclude-file-names) (compiler_test.clj:6)
-expected: (= #{} (c/exclude-file-names "src/cljs" ["cljs/non_existent_file.cljs" "cljs/non_existent_directory"]))
-  actual: (not (= #{} #{"/Users/mimmo/Developer/modern-cljs/compiler/clojurescript/src/cljs/cljs/non_existent_file.cljs"}))
-
-Ran 1 tests containing 12 assertions.
-5 failures, 0 errors.
-{:type :summary, :pass 7, :test 1, :error 0, :fail 5}
-user=>
-```
-## We were really bad
-
-Oh my God, we got 5 fails of 12 assertions. Let's fix them one by one.
-
-The first fix has to do with the failure of `(exclude-file-names
-"src/cljs" [""])` which has resulted in a set of files instead of a void
-set (i.e. #{}). It depends on the void string `""` being passed around
-as a directory name.
-
-All the other fails have to do with non existent files and/or
-directories returned by combining and existing directory with a non
-existing file or directory.
-
-Here is the code the fix them all. Open `compiler.clj` from
-`$CLOJURESCRIPT_HOME/src/clj/cljs` directory and edit the
-`exclude-file-names` function as follows.
-
-```clojure
-(defn exclude-file-names [dir exclude-vec]
-  "Return a set of absolute paths of files to be excluded"
-  (when (and dir (vector? exclude-vec))
-    (set (filter #(.endsWith ^String % ".cljs")
-                 (map #(.getAbsolutePath ^java.io.File %)
-                      (mapcat #(let [file (io/file (str dir) %)]
-                                 (when (and (> (count %) 0) (.exists file))
-                                   (file-seq file)))
-                              exclude-vec))))))
-```
-
-There is large room for refactoring the code later, for now be happy to
-have passed all 12 assertions we defined in `cljs.compiler-test`
-namespace as you can verify by yourself.
-
-Open a new repl as usual. Require `cljs.compiler_test` and
-`clojure.test`. Finally run the test associated with `compiler-test`
-namespace.
-
-```clojure
-$ cd $CLOJURESCRIPT_HOME
-$ ./script/repl
-Clojure 1.4.0
-user=> (require '[clojure.test :as t])
-nil
-user=> (require '[cljs.compiler-test :as c])
-nil
-user=> (t/run-tests 'cljs.compiler-test)
-
-Testing cljs.compiler-test
-
-Ran 1 tests containing 12 assertions.
-0 failures, 0 errors.
-{:type :summary, :pass 12, :test 1, :error 0, :fail 0}
-user=>
-```
-
-## Enter the mutable world
-
-Even a not so careful reader should have noted that the assertions
-assumed the existance of the "src/cljs" source directory which lives
-inside $CLOJURESCRIPT_HOME directory. If you want to go on and creating
-new assertions on a mutable world, you start figthing with it. It is
-frequently easier to mock it up.
-
-# Next step - It's better to be safe than sorry (Part 2)
-
-In the [next tutorial][3] we're going to finish the work on testing that has
-been started here. We'll introduce mocks as a way to manage the
-mutability of the file system when asserting facts on it.
+TO BE DONE
 
 # License
 
-Copyright © Mimmo Cosenza, 2012. Released under the Eclipse Public
+Copyright © Mimmo Cosenza, 2012-13. Released under the Eclipse Public
 License, the same as Clojure.
 
 [1]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-08.md
-[2]: https://raw.github.com/magomimmo/modern-cljs/master/doc/images/src-dir.png
-[3]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-10.md
+[2]: https://github.com/levand/domina#examples
+[3]: https://github.com/magomimmo/domina/blob/master/readme.md#examples
+[4]: http://localhost:3000/shopping-dbg.html
+[5]: https://raw.github.com/magomimmo/modern-cljs/master/doc/images/mouseover.png
+[6]: https://github.com/teropa/hiccups
+[7]: https://github.com/weavejester/hiccup
+[8]: https://github.com/clojure/clojurescript/wiki/Differences-from-Clojure
+[9]: http://localhost:3000/shopping-pre.html
+[10]: http://localhost:3000/shopping.html
