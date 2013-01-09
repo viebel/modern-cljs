@@ -14,13 +14,16 @@
                  ; hiccups dependency
                  [hiccups "0.1.1"]
                  ; c2 dependency
-                 [com.keminglabs/c2 "0.2.1"]]
+                 [com.keminglabs/c2 "0.2.1"]
+                 ; shoreleave dependencies
+                 [com.cemerick/shoreleave-remote-ring "0.0.2"]
+                 [shoreleave/shoreleave-remote "0.2.2"]]
   :plugins [; cljsbuild plugin
             [lein-cljsbuild "0.2.9"]
             ; ring plugin
             [lein-ring "0.7.5"]]
   ; ring tasks configuration
-  :ring {:handler modern-cljs.core/handler}
+  :ring {:handler modern-cljs.shop-server/app}
   ; cljsbuild tasks configuration
   :cljsbuild {:builds
               {

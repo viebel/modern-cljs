@@ -11,3 +11,9 @@
     ;; onload-fn function
     (let [form (.getElementById js/document form-id)]
       (set! (.-onsubmit form) onload-fn))))
+
+(defn ^:export init-button [button-id onload-fn]
+  (if (and js/document
+           (.-getElementById js/document))
+    (let [button (.getElementById js/document button-id)]
+      (set! (.-onclick button) onload-fn))))
