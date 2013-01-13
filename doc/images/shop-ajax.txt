@@ -1,0 +1,13 @@
+title Server-Client Shopping Form
+
+participant "Browser" as BRO
+participant JavaScript as JS
+
+participant Web Server
+
+participatn "
+Shopping Form\nCLJS->+Server\nCLJ: quantity, price ...
+Server\nCLJ-->-Shopping Form\nCLJS: total
+
+Shopping Form\nCLJS->+Server\nCLJ: reset imput
+Server\nCLJ-->-Shopping Form\nCLJS: default values
