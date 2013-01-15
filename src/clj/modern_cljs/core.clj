@@ -1,20 +1,42 @@
 (ns modern-cljs.core
-  (:require [compojure.core :refer [defroutes GET]]
+  (:require [modern-cljs.html :refer [build-pages send-welcome-page]]
+            [modern-cljs.database :refer [users]]
             [compojure.route :refer [resources not-found]]
-            [compojure.handler :refer [site]]))
+            [compojure.core :refer [defroutes GET POST]]
+            [compojure.handler :refer [api site]]
+            [cemerick.shoreleave.rpc :refer [defremote wrap-rpc]]))
 
-;; defroutes macro defines a function that chains individual route
-;; functions together. The request map is passed to each function in
-;; turn, until a non-nil response is returned.
+(defremote authentication
+  [email password]
+  (let [users-credentials (set (keys users))
+        user {:email email :password password}]
+    {:log-error (not (contains? users-credentials user)) :username (users user)}))
+
+(defremote welcome
+  [username]
+  (send-welcome-page username))
+
+(defn authenticate
+  [email password]
+  (let [user {:email email :password password}
+        regex-mail #"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"]
+    (merge {:form-error (or (empty? email) (empty? password))
+            :email-error (empty? (re-matches regex-mail email))}
+            (authentication email password))))
+
+(defn login
+  [email password]
+  (build-pages (authenticate email password)))
+  
 (defroutes app-routes
-  ; to serve document root address
   (GET "/" [] "<p>Hello from compojure</p>")
-  ; to server static pages saved in resources/public directory
+  (POST "/login-page.html" [email password] (login email password))
   (resources "/")
-  ; if page is not found
   (not-found "Page non found"))
 
-;; site function create an handler suitable for a standard website,
-;; adding a bunch of standard ring middleware to app-route:
 (def handler
-  (site app-routes))
+  (api app-routes))
+
+(def app (-> (var handler)
+             (wrap-rpc)
+             (site)))

@@ -121,6 +121,18 @@ input.default {
 	display:block;
 	cursor:pointer !important;
 }
+
+#submitNoJS {
+	margin:1em;
+	width:69px;
+	height:26px;
+	overflow:hidden;
+	border:0;
+	display:block;
+	cursor:pointer !important;
+}
+
+
 #submit:hover {
 	background-position:0 -26px;
 }
