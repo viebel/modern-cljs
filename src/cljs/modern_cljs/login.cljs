@@ -1,43 +1,57 @@
 (ns modern-cljs.login
   (:require-macros [shoreleave.remotes.macros :as shore-macros]
-                   [enfocus.macros :refer [at from set-attr set-prop get-prop content select]])
-  (:require [enfocus.core :as enf-core]
+                   [enfocus.macros :as em])
+  (:require [domina :as dom]
+            [enfocus.core :as enf-core]
             [shoreleave.remotes.http-rpc :as rpc]))
+
+(em/deftemplate error-msg "error-message.html"
+  [msg]
+  ["#errorMessage"] (em/content msg))
 
 (defn reset-fields!
   []
-  (at js/document
-      ["#emailError"] (set-attr :style "display: none")
-      ["#loginError"] (set-attr :style "display: none")
-      ["#formError"] (set-attr :style "display: none")
-      ["#email"] (set-prop :value "")
-      ["#password"] (set-prop :value "")))
+  (em/at js/document
+      ["#errorContainer"] (em/substitute "")
+      ["#email"] (em/set-prop :value "")
+      ["#password"] (em/set-prop :value "")))
 
 (defn sign-action
   [login-status]
   (if (not (login-status :log-error))
-    
     (shore-macros/rpc (welcome (login-status :username)) [welcome-page]
-                      (at js/document
-                          ["html"] (content welcome-page)))
-    (at js/document
-        ["#loginError"] (set-attr :style "display: block"))))
+                      (em/at js/document
+                             ["html"] (em/content welcome-page)))
+    (em/at js/document ["#legend"]
+           (em/after (error-msg "Authentication failed.")))))
 
 (defn validate-usr
   [email password]
   (let [regex-mail #"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"]
     (if (not (re-matches regex-mail email))
-      (at js/document
-          ["#emailError"] (set-attr :style "display: block"))
+      (em/at js/document ["#email"]
+          (em/after (error-msg "Please enter a valid email")))
       (shore-macros/rpc (authentication email password) [login-status] (sign-action login-status)))))
 
-(defn ^:export validate-form []
-  (let [email (from (select ["#email"]) (get-prop :value))
-        password (from (select ["#password"]) (get-prop :value))]
+(defn validate-form []
+  (let [email (em/from (em/select ["#email"]) (em/get-prop :value))
+        password (em/from (em/select ["#password"]) (em/get-prop :value))
+        email-error (empty? email)
+        password-error (empty? password)
+        form-error (and email-error password-error)]
     (reset-fields!)
-    (if (and (> (count email) 0)
-             (> (count password) 0))
-      (validate-usr email password)
-      (at js/document
-          ["#formError"] (set-attr :style "display: block"))))) 
+    (if form-error
+      (em/at js/document ["#legend"]
+            (em/after (error-msg "Please complete the form")))
+      (if password-error
+        (em/at js/document ["#password"]
+               (em/after (error-msg "Please enter a password")))
+        (validate-usr email password))))
+  false)
 
+(defn ^:export init
+  []
+  (if (and js/document
+           (aget js/document "getElementById"))
+    (let [button (dom/by-id "submit")]
+      (aset button "onclick" validate-form))))

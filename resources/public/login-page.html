@@ -13,41 +13,24 @@
     <form method="post" id="loginForm" novalidate>
       <fieldset>
         <legend id="legend">Login</legend>
-	
-        <div>
+	<div>
           <label for="email">Email Address</label>
           <input type="email" name="email" id="email" required>
 	</div>
-	<div>
-	  <font id="emailError" color="red" style="display: none"> Please insert a valid email</font
-        </div>
-
         <div>
           <label for="password">Password</label>
           <input type="password" name="password" id="password" required>
         </div>
 	<div>
-	  <font id="loginError" color="red" style="display: none"> Invalid email or password</font>
-        </div>
-        <div>
           <label for="submit"></label>
-          <input type="hidden" value="Login &rarr;" id="submit">
-        </div>
-	<noscript>
-          <div>
-            <label for="submitNoJS"></label>
-            <input type="submit" value="Login &rarr;" id="submitNoJS">
-          </div>
-	</noscript>
-	<div>
-	  <font id="formError" color="red" style="display: none"> Please, complete the form! </font>
+          <input type="submit" value="Login &rarr;" id="submit">
         </div>
       </fieldset>
     </form>
 
-    <script src="js/modern.js"></script>
+    <script src="js/modern_dbg.js"></script>
     <script>
-      modern_cljs.common.init_button('submit', modern_cljs.login.validate_form);
+      modern_cljs.login.init();
     </script>
 
   </body>

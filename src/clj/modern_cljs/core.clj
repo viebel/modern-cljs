@@ -19,8 +19,11 @@
 (defn authenticate
   [email password]
   (let [user {:email email :password password}
-        regex-mail #"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"]
-    (merge {:form-error (or (empty? email) (empty? password))
+        regex-mail #"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$"
+        email-error (empty? email)
+        password-error (empty? password)]
+    (merge {:form-error (and email-error password-error)
+            :password-error (and password-error (not email-error))
             :email-error (empty? (re-matches regex-mail email))}
             (authentication email password))))
 
