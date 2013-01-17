@@ -19,7 +19,7 @@
 (defn sign-action
   [login-status]
   (if (not (login-status :log-error))
-    (shore-macros/rpc (welcome (login-status :username)) [welcome-page]
+    (shore-macros/rpc (welcome-remote (login-status :username)) [welcome-page]
                       (em/at js/document
                              ["html"] (em/content welcome-page)))
     (em/at js/document ["#legend"]
@@ -31,7 +31,7 @@
     (if (not (re-matches regex-mail email))
       (em/at js/document ["#email"]
           (em/after (error-msg "Please enter a valid email")))
-      (shore-macros/rpc (authentication email password) [login-status] (sign-action login-status)))))
+      (shore-macros/rpc (authentication-remote email password) [login-status] (sign-action login-status)))))
 
 (defn validate-form []
   (let [email (em/from (em/select ["#email"]) (em/get-prop :value))
@@ -54,4 +54,4 @@
   (if (and js/document
            (aget js/document "getElementById"))
     (let [button (dom/by-id "submit")]
-      (aset button "onclick" validate-form))))
+      (aset button "onclick" (fn [evt] (validate-form))))))
