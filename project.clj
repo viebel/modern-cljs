@@ -12,7 +12,8 @@
                  [compojure "1.1.5"]
                  [hiccups "0.2.0"]
                  [com.cemerick/shoreleave-remote-ring "0.0.2"]
-                 [shoreleave/shoreleave-remote "0.2.2"]]
+                 [shoreleave/shoreleave-remote "0.2.2"]
+                 [com.cemerick/friend "0.1.3"]]
 
   :plugins [[lein-cljsbuild "0.2.10"]
             [lein-ring "0.8.2"]]
