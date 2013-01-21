@@ -1,6 +1,8 @@
 (ns modern-cljs.login
-  (:require-macros [hiccups.core :refer [html]])
-  (:require [domina :refer [by-id by-class value append! prepend! destroy! log]]
+  (:require-macros [hiccups.core :refer [html]]
+                   [shoreleave.remotes.macros :as shore-macros])
+  (:require [shoreleave.remotes.http-rpc :as rpc]
+            [domina :refer [by-id by-class value append! prepend! destroy! log]]
             [domina.events :refer [listen! prevent-default]]))
 
 (def ^:dynamic *password-re* #"^(?=.*\d).{4,8}$")
@@ -28,15 +30,16 @@
         password (by-id "password")
         email-val (value email)
         password-val (value password)]
+    ;(prevent-default evt)
     (if (or (empty? email-val) (empty? password-val))
       (do
         (destroy! (by-class "help"))
-        (prevent-default evt)
+                                        ;(prevent-default evt)
         (append! (by-id "loginForm") (html [:div.help "Please complete the form"])))
       (if (and (validate-email email)
                (validate-password password))
-        true
-        (prevent-default evt)))))
+        (shore-macros/rpc (authentication-remote email password) [login-status] (js/alert login-status))
+        false))))
 
 (defn ^:export init []
   (if (and js/document

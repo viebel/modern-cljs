@@ -13,7 +13,8 @@
                  [hiccups "0.2.0"]
                  [com.cemerick/shoreleave-remote-ring "0.0.2"]
                  [shoreleave/shoreleave-remote "0.2.2"]
-                 [com.cemerick/friend "0.1.3"]]
+                 [com.cemerick/friend "0.1.3"]
+                 [enlive "1.0.1"]]
 
   :plugins [[lein-cljsbuild "0.2.10"]
             [lein-ring "0.8.2"]]
@@ -22,7 +23,7 @@
   ;; :hooks [leiningen.cljsbuild]
 
   ;; ring tasks configuration
-  :ring {:handler modern-cljs.remotes/app}
+  :ring {:handler modern-cljs.core/middleware}
 
   ;; cljsbuild tasks configuration
   :cljsbuild {:builds

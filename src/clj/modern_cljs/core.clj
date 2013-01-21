@@ -1,19 +1,35 @@
 (ns modern-cljs.core
   (:require [compojure.core :refer [defroutes GET]]
             [compojure.route :refer [resources not-found]]
-            [compojure.handler :refer [site]]
+            [compojure.handler :refer [api site]]
+            [cemerick.shoreleave.rpc :refer [defremote wrap-rpc]]
             [cemerick.friend :as friend]
             (cemerick.friend [workflows :as workflows]
-                             [credential :as cred])))
+                             [credentials :as creds])))
+            
+;; a dummy in-memory user db
+(def users {"mimmo.cosenza@gmail.com" {:username "Mimmo"
+                                       :password (creds/hash-bcrypt "mimmo1")
+                                       :roles #{::admin}}
+            "giacomo.cosenza@sinapsi.com" {:username "Giacomo"
+                                           :password (creds/hash-bcrypt "mimmo1")
+                                           :roles #{::user}}})
 
-;; a dummy i-memory user db
-(def users {"root" {:username "mimmo.cosenza@gmail.com"
-                    :password "mimmo1"
-                    :roles #{::admin}}
-            "mimmo" {:username "giacomo.cosenza@sinapsi.com"
-                     :password "mimmo1"
-                     :roles @{::user}}})
+;; Set ::admin to be a parent of ::user, so ::admin has at least the
+;; same permissions of ::user.
+(derive ::admin ::user)
 
+;; Credential function which. It takes as input a the email and return
+;; the map of the credentials associated with the email.
+(defn load-credentials-fn
+  [email]
+  (users email))
+
+;; Remote function for authentication
+(defremote authentication-remote
+  [email password]
+  (let [user-credentials {:username email :password password}]
+    (creds/bcrypt-credential-fn load-credentials-fn user-credentials)))
 
 ;; defroutes macro defines a function that chains individual route
 ;; functions together. The request map is passed to each function in
@@ -30,3 +46,17 @@
 ;; adding a bunch of standard ring middleware to app-route:
 (def handler
   (site app-routes))
+
+;; definition of the middleware. We wrap the handler and add the
+;; remote functions.
+(def middleware
+  (-> (var handler)
+      (wrap-rpc)
+      (site)))
+
+;; Middleaware secured by friend security features
+(def secured-middleware
+  (-> middleware
+      (friend/authenticate {:credential-fn (partial creds/bcrypt-credential-fn users)
+                            :workflows [(workflows/interactive-form)]
+                            :login-uri "/login.html"})))
