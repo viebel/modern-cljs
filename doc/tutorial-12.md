@@ -1,4 +1,59 @@
-# Tutorial 12 - A touch of security
+# Tutorial 12 - Be friendly with ajax
+
+In the [latest tutorial][1] we saw few Domina features about DOM events
+which helped us to the desire of adhering to the progressive enhancement
+strategy in developing a clojurean web application.  By implementing the
+*javascript* layer, in the previous tutorial we only covered one the
+four typical layers of that stategy. We still need to implement the top
+most layer, the HTML5 layer, and the two deeper ones: the Ajax layer and
+the *pure* server side layer.
+
+# Introduction
+
+In this tutorial we're going to cover the three missing layers of our
+`loginForm` example. We start from the HTML5 layer by adding few
+attributes to the input fields of the `loginForm`, then we'll step over
+the already implemented javascript layer to add the third layer, the
+Ajax one. Finally, we're going to implement the server side the, the one
+that we all started from in the 90's.
+
+# The HTML5 layer
+
+As you already now I'm really far away from being an HTML designer. So,
+don't ask me to be what I'm not and what I don't want to be anyway.
+
+HTML5 has a lot of new stuff. Here we intend just to add the `pattern`
+attribute of the `email` and `password` field of the `loginForm`.
+
+This attribute allows to incorporate a regular expression validator with
+those input field and when the user type is his `email` and his
+`password` the browser takes care of matchig them with the provided
+regular expression as soon as the input fields lose the focus
+(i.e. blur).
+
+Here is the updated `login-dbg.html` html code.
+
+```html
+
+```
+
+
+the test in the field, that text is
+matched against the provided regular expression. If the match does not
+pass, then the browser makes to the user same evidence of that and it
+blocks any progression towards the underlying layers, beeing those the
+javascript layer, the ajax one or the server-side action script attached
+to the form.
+
+
+
+rexex,  to verify that it satisfy
+Specifically, by accurately used the `prevent-default` function inside
+the `submit` button's event handlers, we were able to interrupt the
+process esclalation of the event from the `submit` button itself to the
+`action` attribute of the `loginForm`.
+
+
 
 Friend security
 
@@ -43,7 +98,9 @@ TBD
 Copyright © Mimmo Cosenza, 2012-13. Released under the Eclipse Public
 License, the same as Clojure.
 
-[1]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-10.md
+[1]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-11.md
+
+
 [2]: https://github.com/shoreleave/shoreleave-remote-ring
 [3]: https://github.com/shoreleave/shoreleave-remote#shoreleave
 [4]: https://github.com/levand/domina
