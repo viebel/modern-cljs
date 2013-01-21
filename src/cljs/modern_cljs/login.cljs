@@ -2,12 +2,20 @@
   (:require-macros [hiccups.core :refer [html]]
                    [shoreleave.remotes.macros :as shore-macros])
   (:require [shoreleave.remotes.http-rpc :as rpc]
-            [domina :refer [by-id by-class value append! prepend! destroy! log]]
+            [domina :refer [by-id by-class value append! prepend! destroy! log swap-content!]]
             [domina.events :refer [listen! prevent-default]]))
 
 (def ^:dynamic *password-re* #"^(?=.*\d).{4,8}$")
 
 (def ^:dynamic *email-re* #"^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$")
+
+(defn sign-in [login-status]
+  (destroy! (by-class "help"))
+  (destroy! (by-class "error"))
+  (if login-status
+    (let [username (login-status :username)]
+      (shore-macros/rpc (welcome-page-remote login-status) [welcome-page] (swap-content! (by-id "loginForm") welcome-page)))
+    (prepend! (by-id "loginForm") (html [:div.help.email "Authentication Failed, wrong email or password"]))))
 
 (defn validate-email [email]
   (destroy! (by-class "email"))
@@ -30,15 +38,14 @@
         password (by-id "password")
         email-val (value email)
         password-val (value password)]
-    ;(prevent-default evt)
+    (prevent-default evt)
     (if (or (empty? email-val) (empty? password-val))
       (do
         (destroy! (by-class "help"))
-                                        ;(prevent-default evt)
         (append! (by-id "loginForm") (html [:div.help "Please complete the form"])))
       (if (and (validate-email email)
                (validate-password password))
-        (shore-macros/rpc (authentication-remote email password) [login-status] (js/alert login-status))
+        (shore-macros/rpc (authentication-remote email-val password-val) [login-status] (sign-in login-status))
         false))))
 
 (defn ^:export init []

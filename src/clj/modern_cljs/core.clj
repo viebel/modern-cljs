@@ -1,12 +1,13 @@
 (ns modern-cljs.core
-  (:require [compojure.core :refer [defroutes GET]]
+  (:require [modern-cljs.snippets :refer [welcome-page render]]
+            [compojure.core :refer [defroutes GET]]
             [compojure.route :refer [resources not-found]]
             [compojure.handler :refer [api site]]
             [cemerick.shoreleave.rpc :refer [defremote wrap-rpc]]
             [cemerick.friend :as friend]
             (cemerick.friend [workflows :as workflows]
                              [credentials :as creds])))
-            
+                       
 ;; a dummy in-memory user db
 (def users {"mimmo.cosenza@gmail.com" {:username "Mimmo"
                                        :password (creds/hash-bcrypt "mimmo1")
@@ -15,21 +16,18 @@
                                            :password (creds/hash-bcrypt "mimmo1")
                                            :roles #{::user}}})
 
-;; Set ::admin to be a parent of ::user, so ::admin has at least the
-;; same permissions of ::user.
-(derive ::admin ::user)
-
 ;; Credential function which. It takes as input a the email and return
 ;; the map of the credentials associated with the email.
-(defn load-credentials-fn
-  [email]
+(defn load-credentials-fn [email]
   (users email))
 
 ;; Remote function for authentication
-(defremote authentication-remote
-  [email password]
+(defremote authentication-remote [email password]
   (let [user-credentials {:username email :password password}]
     (creds/bcrypt-credential-fn load-credentials-fn user-credentials)))
+
+(defremote welcome-page-remote [login-status]
+  (render (welcome-page login-status)))
 
 ;; defroutes macro defines a function that chains individual route
 ;; functions together. The request map is passed to each function in
@@ -53,10 +51,3 @@
   (-> (var handler)
       (wrap-rpc)
       (site)))
-
-;; Middleaware secured by friend security features
-(def secured-middleware
-  (-> middleware
-      (friend/authenticate {:credential-fn (partial creds/bcrypt-credential-fn users)
-                            :workflows [(workflows/interactive-form)]
-                            :login-uri "/login.html"})))

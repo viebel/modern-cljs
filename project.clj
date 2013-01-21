@@ -56,5 +56,4 @@
                            :output-to "resources/public/js/modern.js"
 
                            ;; advanced optimization
-                           :optimizations :advanced}}
-               }})
+                           :optimizations :advanced}}}})
