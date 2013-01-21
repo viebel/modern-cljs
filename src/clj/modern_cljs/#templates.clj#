@@ -1,0 +1,4 @@
+(ns modern-cljs.templates
+  (:require [net.cgrand.enlive-html :refer [deftemplate]]))
+
+(deftemplate
