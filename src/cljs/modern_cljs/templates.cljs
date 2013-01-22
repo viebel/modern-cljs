@@ -3,8 +3,8 @@
   (:require [enfocus.core :as enfcore]))
 
 (def roles-map
-  {#{:modern-cljs.core/user} "User"
-   #{:modern-cljs.core/admin} "Administrator"})
+  {#{:modern-cljs.database/user} "User"
+   #{:modern-cljs.database/admin} "Administrator"})
 
 (deftemplate welcome-page "../private/templates/welcome-page.html"
   [login-status]

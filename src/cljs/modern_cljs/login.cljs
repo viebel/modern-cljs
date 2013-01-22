@@ -44,6 +44,7 @@
     (if (or (empty? email-val) (empty? password-val))
       (do
         (destroy! (by-class "help"))
+        (destroy! (by-class "error"))
         (append! (by-id "loginForm") (html [:div.error "Please complete the form"])))
       (if (and (validate-email email)
                (validate-password password))
