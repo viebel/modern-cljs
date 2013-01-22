@@ -4,7 +4,7 @@
   (:require [modern-cljs.templates :refer [welcome-page]]
             [shoreleave.remotes.http-rpc :as rpc]
             [domina :refer [by-id by-class value append! prepend! destroy! log swap-content!]]
-            [domina.events :refer [listen! prevent-default]]))
+            [domina.events :refer [listen! prevent-default dispatch!]]))
 
 (def ^:dynamic *password-re* #"^(?=.*\d).{4,8}$")
 
@@ -40,14 +40,16 @@
         password (by-id "password")
         email-val (value email)
         password-val (value password)]
-    (prevent-default evt)
+    ;(prevent-default evt)
     (if (or (empty? email-val) (empty? password-val))
       (do
         (destroy! (by-class "help"))
-        (append! (by-id "loginForm") (html [:div.error "Please complete the form"])))
+        (destroy! (by-class "error"))
+        (append! (by-id "loginForm") (html [:div.error "Please complete the form"]))
+        (prevent-default evt))
       (if (and (validate-email email)
                (validate-password password))
-        (shore-macros/rpc (authentication-remote email-val password-val) [login-status] (sign-in login-status))
+        (dispatch! (by-id "loginForm") :submit {})
         false))))
 
 (defn ^:export init []
