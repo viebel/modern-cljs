@@ -1,5 +1,6 @@
 (ns modern-cljs.validation
-  (:require [modern-cljs.templates :refer [welcome-page templ-render top-message bottom-message double-message]]))
+  (:require [modern-cljs.templates :refer [welcome-page templ-render top-message bottom-message double-message]]
+            [modern-cljs.remotes :refer [authentication-remote]]))
 
 (def ^:dynamic *password-re* #"^(?=.*\d).{4,8}$")
 
@@ -15,3 +16,16 @@
 
 (defn validate-password [password]
   (empty? (re-matches *password-re* password)))
+
+(defn validate-form [email password]
+  (if (and (empty? email) (empty? password))
+    (templ-render bottom-message "Please complete the form")
+    (let [email-error (validate-email email)
+          password-error (validate-password password)] 
+      (if (and (not email-error) (not password-error))
+        (sign-in (authentication-remote email password))
+        (if (and email-error (not password-error))
+          (templ-render top-message "Wrong email")
+          (if (and (not email-error) password-error)
+            (templ-render bottom-message "Wrong password")
+            (templ-render double-message "Wrong email" "Wrong password")))))))

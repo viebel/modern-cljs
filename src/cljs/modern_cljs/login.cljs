@@ -1,7 +1,8 @@
 (ns modern-cljs.login
   (:require-macros [hiccups.core :refer [html]]
                    [shoreleave.remotes.macros :as shore-macros])
-  (:require [shoreleave.remotes.http-rpc :as rpc]
+  (:require [modern-cljs.templates :refer [welcome-page]]
+            [shoreleave.remotes.http-rpc :as rpc]
             [domina :refer [by-id by-class value append! prepend! destroy! log swap-content!]]
             [domina.events :refer [listen! prevent-default]]))
 
@@ -13,8 +14,7 @@
   (destroy! (by-class "help"))
   (destroy! (by-class "error"))
   (if login-status
-    (let [username (login-status :username)]
-      (shore-macros/rpc (welcome-page-remote login-status) [welcome-page] (swap-content! (by-id "loginForm") welcome-page)))
+    (swap-content! (by-id "loginForm") (welcome-page login-status))
     (prepend! (by-id "loginForm") (html [:div.help.email "Authentication Failed, wrong email or password"]))))
 
 (defn validate-email [email]

@@ -1,15 +1,14 @@
 (ns modern-cljs.snippets
-  (:require [net.cgrand.enlive-html :refer [emit* defsnippet content]]))
+  (:require [net.cgrand.enlive-html :refer [emit* defsnippet content html-resource]]))
 
 (def roles-map
-  {#{:modern-cljs.core/user} "User"
-   #{:modern-cljs.core/admin} "Administrator"})
+  {#{:modern-cljs.database/user} "User"
+   #{:modern-cljs.database/admin} "Administrator"})
 
-(defn snip-render [snippet args]
-  (apply str (emit* (snippet args))))
+(defn snip-render [snippet arg1 arg2]
+  (apply str (emit* (snippet arg1 arg2))))
 
-(defsnippet welcome-page "templates/welcome-page.html" [:form#welcomeForm]
-  [login-status]
-  [:b#welcome] (content (str "Hi " (login-status :username)))
-  [:div#role] (content (str "You are logged as " (roles-map (login-status :roles)))))
-
+(defsnippet welcome-form "private/templates/welcome-page.html" [:form#welcomeForm]
+  [username role]
+  [:b#welcome] (content (str "Hi " username))
+  [:div#role] (content (str "You are logged as " (roles-map role))))
