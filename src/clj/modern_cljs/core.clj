@@ -13,8 +13,6 @@
   (GET "/" [] "<p>Hello from compojure</p>")
   ;; when JavaScript are disabled, one POST for each login page 
   (POST "/public/login.html" [email password] (validate-form email password))
-  (POST "/public/login-dbg.html" [email password] (validate-form email password))
-  (POST "/public/login-pre.html" [email password] (validate-form email password))
   ;; to server static pages saved in /resources directory
   (resources "/" {:root "."})
   ;; if page is not found

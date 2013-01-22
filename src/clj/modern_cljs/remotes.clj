@@ -1,7 +1,6 @@
 (ns modern-cljs.remotes
   (:require [modern-cljs.database :refer [users]]
-            [compojure.handler :refer [site]]
-            [cemerick.shoreleave.rpc :refer [defremote wrap-rpc]]
+            [cemerick.shoreleave.rpc :refer [defremote]]
             [cemerick.friend :as friend]
             (cemerick.friend [workflows :as workflows]
                              [credentials :as creds])))
