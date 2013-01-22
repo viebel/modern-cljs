@@ -40,7 +40,6 @@
         password (by-id "password")
         email-val (value email)
         password-val (value password)]
-    ;(prevent-default evt)
     (if (or (empty? email-val) (empty? password-val))
       (do
         (destroy! (by-class "help"))
