@@ -1,21 +1,40 @@
-# Tutorial 12 - Be friendly with ajax
+# Tutorial 12 - Be friendly with ajax (Part 1)
 
 In the [latest tutorial][1] we saw few Domina features about DOM events
 which helped us to the desire of adhering to the progressive enhancement
-strategy in developing a clojurean web application.  By implementing the
-*javascript* layer, in the previous tutorial we only covered one the
-four typical layers of that stategy. We still need to implement the top
-most layer, the HTML5 layer, and the two deeper ones: the Ajax layer and
-the *pure* server side layer.
+strategy in developing a clojurean web application.  By implementing,
+via CLJS, the *javascript* layer, in the previous tutorial we only
+covered one the four typical layers of that stategy. We still need to
+implement the top most layer, the HTML5 layer, and the two deeper ones:
+the Ajax layer and the *pure* server side layer.
 
 # Introduction
 
-In this tutorial we're going to cover the three missing layers of our
-`loginForm` example. We start from the HTML5 layer by adding few
-attributes to the input fields of the `loginForm`, then we'll step over
-the already implemented javascript layer to add the third layer, the
-Ajax one. Finally, we're going to implement the server side the, the one
-that we all started from in the 90's.
+In this and the next tutorials we're going to cover the two deeper
+missing layers of our `loginForm` example, leaving the *superficial*
+HTML5 layer to anyone who likes to play with it. The only two exceptions
+regard the new `title` and `pattern` HTML5 attributes which are going to
+be used instead of the corresponding patterns and help messages we
+previously screwed in the `validate-email` and `validate-passord`
+functions.
+
+Here ithe update `login-dbg` html.
+
+```html
+
+```
+We're going to
+use the to
+extract from the email and password validator functions both the email
+and password regular expressions and the corresponding help messages to
+be communicated to the user when the provided email and password do not
+match them.
+
+
+adding few attributes to the input fields of the `loginForm`, then we'll
+step over the already implemented javascript layer to add the third
+layer, the Ajax one. Finally, we're going to implement the server side
+the, the one that we all started from in the 90's.
 
 # The HTML5 layer
 
