@@ -1,6 +1,8 @@
 (ns modern-cljs.core
-  (:require [modern-cljs.snippets :refer [welcome-page render]]
-            [compojure.core :refer [defroutes GET]]
+  (:require [modern-cljs.validation :refer [validate-email validate-password sign-in]]
+            [modern-cljs.templates :refer [templ-render bottom-message top-message double-message]]
+            [modern-cljs.snippets :refer [welcome-page snip-render]]
+            [compojure.core :refer [defroutes GET POST]]
             [compojure.route :refer [resources not-found]]
             [compojure.handler :refer [api site]]
             [cemerick.shoreleave.rpc :refer [defremote wrap-rpc]]
@@ -27,7 +29,9 @@
     (creds/bcrypt-credential-fn load-credentials-fn user-credentials)))
 
 (defremote welcome-page-remote [login-status]
-  (render (welcome-page login-status)))
+  (snip-render welcome-page login-status))
+
+(declare validate-form)
 
 ;; defroutes macro defines a function that chains individual route
 ;; functions together. The request map is passed to each function in
@@ -35,6 +39,8 @@
 (defroutes app-routes
   ; to serve document root address
   (GET "/" [] "<p>Hello from compojure</p>")
+  ; when JavaScript are disabled
+  (POST "/login-dbg.html" [email password] (validate-form email password))
   ; to server static pages saved in resources/public directory
   (resources "/")
   ; if page is not found
@@ -43,7 +49,7 @@
 ;; site function create an handler suitable for a standard website,
 ;; adding a bunch of standard ring middleware to app-route:
 (def handler
-  (site app-routes))
+  (api app-routes))
 
 ;; definition of the middleware. We wrap the handler and add the
 ;; remote functions.
@@ -51,3 +57,17 @@
   (-> (var handler)
       (wrap-rpc)
       (site)))
+
+;; Validation routine
+(defn validate-form [email password]
+  (if (and (empty? email) (empty? password))
+    (templ-render bottom-message "Please complete the form")
+    (let [email-error (validate-email email)
+          password-error (validate-password password)] 
+      (if (and (not email-error) (not password-error))
+        (sign-in (authentication-remote email password))
+        (if (and email-error (not password-error))
+          (templ-render top-message "Wrong email")
+          (if (and (not email-error) password-error)
+            (templ-render bottom-message "Wrong password")
+            (templ-render double-message "Wrong email" "Wrong password")))))))
