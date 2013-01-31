@@ -4,9 +4,16 @@
   (:require [domina :refer [by-id by-class value append! prepend! destroy! attr log]]
             [domina.events :refer [listen! prevent-default]]
             [hiccups.runtime :as hiccupsrt]
+            [modern-cljs.templates :refer [welcome-page]]
             [modern-cljs.login.validators :refer [user-credential-errors]]
             [shoreleave.remotes.http-rpc :refer [remote-callback]]))
 
+(defn sign-in [login-status]
+  (destroy! (by-class "help"))
+  (destroy! (by-class "error"))
+  (if login-status
+    (swap-content! (by-id "loginForm") (welcome-page login-status))
+    (prepend! (by-id "loginForm") (html [:div.help.email "Authentication Failed, wrong email or password"]))))
 
 (defn validate-email-domain [email]
   (remote-callback :email-domain-errors
@@ -42,8 +49,8 @@
         (destroy! (by-class "help"))
         (prevent-default evt)
         (append! (by-id "loginForm") (html [:div.help "Please complete the form."])))
-      (prevent-default evt))
-    true))
+      (remote-callback :authentication-remote [email password] (fn [login-status] (sign-in login-status)))
+    false))
 
 (defn ^:export init []
   (if (and js/document

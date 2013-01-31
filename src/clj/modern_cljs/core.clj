@@ -2,7 +2,8 @@
   (:require [compojure.core :refer [defroutes GET POST]]
             [compojure.route :refer [resources not-found]]
             [compojure.handler :refer [site]]
-            [modern-cljs.login :refer [authenticate-user]]))
+            [modern-cljs.login :refer [authenticate-user]]
+            [cemerick.shoreleave.rpc :refer [wrap-rpc]]))
 
 ;; defroutes macro defines a function that chains individual route
 ;; functions together. The request map is passed to each function in
@@ -21,3 +22,7 @@
 ;;; adding a bunch of standard ring middleware to app-route:
 (def handler
   (site app-routes))
+
+(def middleware (-> (var handler)
+                    (wrap-rpc)
+                    (site)))

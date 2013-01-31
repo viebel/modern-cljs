@@ -1,8 +1,10 @@
 (ns modern-cljs.remotes
-  (:require [modern-cljs.core :refer [handler]]
-            [modern-cljs.login.java.validators :as v]
-            [compojure.handler :refer [site]]
-            [cemerick.shoreleave.rpc :refer [defremote wrap-rpc]]))
+  (:require [modern-cljs.login.java.validators :as v]
+            [modern-cljs.database :refer [users]]
+            [cemerick.shoreleave.rpc :refer [defremote]]
+            [cemerick.friend :as friend]
+            (cemerick.friend [workflows :as workflows]
+                             [credentials :as creds])))
 
 (defremote calculate [quantity price tax discount]
   (-> (* quantity price)
@@ -12,6 +14,7 @@
 (defremote email-domain-errors [email]
   (v/email-domain-errors email))
 
-(def app (-> (var handler)
-             (wrap-rpc)
-             (site)))
+(defremote authentication-remote [email password]
+  (let [user-credentials {:username email :password password}]
+    (creds/bcrypt-credential-fn #(users %) user-credentials)))
+
