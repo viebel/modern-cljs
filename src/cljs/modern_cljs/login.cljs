@@ -1,7 +1,7 @@
 (ns modern-cljs.login
   (:require-macros [hiccups.core :refer [html]]
                    [shoreleave.remotes.macros :as shore-macros])
-  (:require [domina :refer [by-id by-class value append! prepend! destroy! attr log]]
+  (:require [domina :refer [by-id by-class value append! prepend! destroy! attr log swap-content!]]
             [domina.events :refer [listen! prevent-default]]
             [hiccups.runtime :as hiccupsrt]
             [modern-cljs.templates :refer [welcome-page]]
@@ -11,9 +11,9 @@
 (defn sign-in [login-status]
   (destroy! (by-class "help"))
   (destroy! (by-class "error"))
-  (if login-status
+  (if (boolean login-status)
     (swap-content! (by-id "loginForm") (welcome-page login-status))
-    (prepend! (by-id "loginForm") (html [:div.help.email "Authentication Failed, wrong email or password"]))))
+    (prepend! (by-id "loginForm") (html [:div.help.email "Authentication Failed."]))))
 
 (defn validate-email-domain [email]
   (remote-callback :email-domain-errors
@@ -43,14 +43,18 @@
     true))
 
 (defn validate-form [evt email password]
-  (if-let [{e-errs :email p-errs :password} (user-credential-errors (value email) (value password))]
-    (if (or e-errs p-errs)
+  (prevent-default evt)
+  (let [email (value email)
+        password (value password)
+        {e-errs :email p-errs :password} (user-credential-errors email password)]
+    (if (or (boolean e-errs) (boolean p-errs))
       (do
         (destroy! (by-class "help"))
-        (prevent-default evt)
         (append! (by-id "loginForm") (html [:div.help "Please complete the form."])))
-      (remote-callback :authentication-remote [email password] (fn [login-status] (sign-in login-status)))
-    false))
+      (remote-callback :authentication-remote
+                       [email password]
+                       #(sign-in %))))
+  false)
 
 (defn ^:export init []
   (if (and js/document

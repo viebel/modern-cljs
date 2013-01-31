@@ -7,15 +7,7 @@
   ([template arg] (apply str (template arg)))
   ([template arg1 arg2] (apply str (template arg1 arg2))))
 
-(deftemplate top-message "public/login.html"
-  [msg]
-  [:form#loginForm] (prepend (html-snippet (hiccup/html [:div.help msg]))))
-
-(deftemplate bottom-message "public/login.html"
-  [msg]
-  [:form#loginForm] (append (html-snippet (hiccup/html [:div.help msg]))))
-
-(deftemplate double-message "public/login.html"
+(deftemplate error-page "public/login.html"
   [top-msg bottom-msg]
   [:form#loginForm] (prepend (html-snippet (hiccup/html [:div.help top-msg])))
   [:form#loginForm] (append (html-snippet (hiccup/html [:div.help bottom-msg]))))
