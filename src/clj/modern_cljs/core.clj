@@ -23,6 +23,7 @@
 (def handler
   (site app-routes))
 
+;; wrap the remotes functions in modern-cljs.remotes
 (def middleware (-> (var handler)
                     (wrap-rpc)
                     (site)))

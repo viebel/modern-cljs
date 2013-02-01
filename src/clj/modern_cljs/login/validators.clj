@@ -2,8 +2,10 @@
   (:require [valip.core :refer [validate]]
             [valip.predicates :refer [present? matches email-address?]]))
 
+;; Regular expression for validating passwords
 (def ^:dynamic *re-password* #"^(?=.*\d).{4,8}$")
 
+;; Validate the emai and password. It returns a map of errors.
 (defn user-credential-errors [email password]
   (validate {:email email :password password}
             [:email present? "Email can't be empty."]

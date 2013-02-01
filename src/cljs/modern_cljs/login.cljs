@@ -8,6 +8,7 @@
             [modern-cljs.login.validators :refer [user-credential-errors]]
             [shoreleave.remotes.http-rpc :refer [remote-callback]]))
 
+;; The user faces his density (McFly ...)
 (defn sign-in [login-status]
   (destroy! (by-class "help"))
   (destroy! (by-class "error"))
@@ -15,6 +16,7 @@
     (swap-content! (by-id "loginForm") (welcome-page login-status))
     (prepend! (by-id "loginForm") (html [:div.help.email "Authentication Failed."]))))
 
+;; Remote call to the domain validator
 (defn validate-email-domain [email]
   (remote-callback :email-domain-errors
                    [email]
@@ -25,23 +27,25 @@
                         false)
                       true)))
 
+;; Call to credentials validator only for email
 (defn validate-email [email]
   (destroy! (by-class "email"))
-  (let [{errors :email} (user-credential-errors (value email) nil)]
-     (if errors
-       (do
-         (prepend! (by-id "loginForm") (html [:div.help.email (first errors)]))
-         false)
-       (validate-email-domain (value email)))))
+  (if-let [errors ((user-credential-errors (value email) nil) :email)]
+    (do
+      (prepend! (by-id "loginForm") (html [:div.help.email (first errors)]))
+      false)
+    (validate-email-domain (value email))))
 
+;; Call to credentials validator only for password
 (defn validate-password [password]
   (destroy! (by-class "password"))
-  (if-let [{errors :password} (user-credential-errors nil (value password))]
+  (if-let [errors ((user-credential-errors nil (value password)) :password)]
     (do
       (append! (by-id "loginForm") (html [:div.help.password (first errors)]))
       false)
     true))
 
+;; Validate function
 (defn validate-form [evt email password]
   (prevent-default evt)
   (let [email (value email)
@@ -56,6 +60,7 @@
                        #(sign-in %))))
   false)
 
+;; Initializating the submit button
 (defn ^:export init []
   (if (and js/document
            (aget js/document "getElementById"))

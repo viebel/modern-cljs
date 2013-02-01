@@ -5,6 +5,7 @@
             [shoreleave.remotes.http-rpc :refer [remote-callback]]
             [cljs.reader :refer [read-string]]))
 
+;; Calculate routine
 (defn calculate []
   (let [quantity (read-string (value (by-id "quantity")))
         price (read-string (value (by-id "price")))
@@ -14,14 +15,17 @@
                      [quantity price tax discount]
                      #(set-value! (by-id "total") (.toFixed % 2)))))
 
+;; Print a message
 (defn add-help! []
   (append! (by-id "shoppingForm")
                (html [:div.help "Click to calculate"])))
 
+;; Remove that message
 (defn remove-help![]
   ;;(destroy! (by-class "help")))
   (destroy! (.getElementsByClassName js/document "help")))
 
+;; Iniatialize the calculate button
 (defn ^:export init []
   (when (and js/document
              (aget js/document "getElementById"))
