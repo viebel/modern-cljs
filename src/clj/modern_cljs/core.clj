@@ -18,8 +18,8 @@
   ;; if page is not found
   (not-found "Page non found"))
 
-;;; site function create an handler suitable for a standard website,
-;;; adding a bunch of standard ring middleware to app-route:
+;; site function create an handler suitable for a standard website,
+;; adding a bunch of standard ring middleware to app-route:
 (def handler
   (site app-routes))
 

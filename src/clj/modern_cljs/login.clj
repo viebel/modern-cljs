@@ -9,12 +9,12 @@
     (templ-render welcome-page login-status)
     (templ-render error-page  "Authentication Failed." nil)))
 
-(defn concat-error-message [errors-map]
-  {:top-message (nth (errors-map :email) 0)
-   :bottom-message (nth (errors-map :password) 0)})
+(defn error-message [errors-map]
+  {:top-message (first (errors-map :email))
+   :bottom-message (first (errors-map :password))})
 
 (defn authenticate-user [email password]
   (if-let [errors (merge (email-domain-errors email) (user-credential-errors email password))]
-    (let [{e-errs-msg :top-message p-errs-msg :bottom-message} (concat-error-message errors)]
+    (let [{e-errs-msg :top-message p-errs-msg :bottom-message} (error-message errors)]
       (templ-render error-page e-errs-msg p-errs-msg))
       (sign-in (authentication-remote email password))))
