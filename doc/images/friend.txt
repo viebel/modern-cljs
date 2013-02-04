@@ -1,0 +1,12 @@
+participant "User\nBrowser" as USR
+participatn "Ring\nAdapter as RIN
+participant "Friend\nMiddleware as FRI
+participant "Ring\nHandler" as HAN
+participant "Roles" as ROL
+participant "Authorization" as AUT
+participant "DB" as DB
+participant "Ring Handler" as HA
+participant "Secured Handler" as SHA
+
+USR->RIN: submit a request
+RIN->FRI: submit a request

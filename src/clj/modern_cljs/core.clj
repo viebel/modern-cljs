@@ -2,7 +2,8 @@
   (:require [compojure.core :refer [defroutes GET POST]]
             [compojure.route :refer [resources not-found]]
             [compojure.handler :refer [site]]
-            [modern-cljs.login :refer [authenticate-user]]))
+            [modern-cljs.login :refer [authenticate-user]]
+            [cemerik.friend :refer [authorize]]))
 
 ;; defroutes macro defines a function that chains individual route
 ;; functions together. The request map is passed to each function in
