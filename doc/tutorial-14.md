@@ -3,20 +3,18 @@
 In the [latest tutorial][1] we were able to reach the following decent
 objectives:
 
-* follow the Don't Repeat Yourself (DRY) principle by sharing the rules
-  of the `Login Form` validation that are common between the server-side
-  and the client-side code. To reach this result we used the [Valip][2]
-  library and the `:crossovers` build option of [lein-cljsbuild][3];
+* follow the Don't Repeat Yourself (DRY) principle by sharing the code
+  of the `Login Form` validators that are commons between the
+  server-side and the client-side; 
 * adhere to the progressive enhancement strategy by defining and
-  remotising a server-side only validator. To reach this result we used
-  [Valip][2] and [Shoreleave][4] libraries.
+  remotising a server-side only validator.
 
 To complete the use of the `Login Form` as a reference sample for our long
 journey in the CLJS/CLJ land, we need to fill few residual gaps.
 
 # Introduction
 
-In this tutorial we're going to add to the `modern-cljs` project some
+In this tutorial we're going to fill two residual gaps for completing 
 kind of security. To face this new topic, which again is crossing the
 border between the client and the server, we'll use the [Friend][5]
 library. Useless to say that had been donated to us by
