@@ -3,7 +3,8 @@
             [compojure.route :refer [resources not-found]]
             [compojure.handler :refer [site]]
             [modern-cljs.login :refer [authenticate-user]]
-            [cemerick.friend :refer [authorize authenticate]]))
+            [cemerick.friend :refer [authorize authenticate]]
+            [cemerick.friend.workflows :refer [interactive-form]]))
 
 ;; defroutes macro defines a function that chains individual route
 ;; functions together. The request map is passed to each function in

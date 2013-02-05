@@ -8,3 +8,4 @@
             "mimmo" {:email "mimmo.cosenza@gmail.com"
                      :password (hash-bcrypt "user1")
                      :roles #{::user}}})
+
