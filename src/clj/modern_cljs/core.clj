@@ -3,7 +3,7 @@
             [compojure.route :refer [resources not-found]]
             [compojure.handler :refer [site]]
             [modern-cljs.login :refer [authenticate-user]]
-            [cemerik.friend :refer [authorize]]))
+            [cemerick.friend :refer [authorize authenticate]]))
 
 ;; defroutes macro defines a function that chains individual route
 ;; functions together. The request map is passed to each function in
@@ -11,6 +11,8 @@
 (defroutes app-routes
   ;; to serve document root address
   (GET "/" [] "<p>Hello from compojure</p>")
+  ;; an admin protected route
+  (GET "/admin" request (authorize #{::admin} "<p1>Admin Reserver Page</p1>"))
   ;; to authenticate the user
   (POST "/login" [email password] (authenticate-user email password))
   ;; to server static pages saved in resources/public directory
@@ -21,4 +23,4 @@
 ;;; site function create an handler suitable for a standard website,
 ;;; adding a bunch of standard ring middleware to app-route:
 (def handler
-  (site app-routes))
+  (site (authenticate app-routes {:login-uri "/login-dbg.html"})))

@@ -1,0 +1,16 @@
+participant "User" as USR
+participant "Browser" as BRO
+participant "Server" as SER
+
+USR->BRO: show me THAT
+BRO->SER: I need THAT to be shown to my user
+SER->SER: Has THAT any access restriction?
+SER->BRO: I can't give you THAT without knowing your user.\nTell him to login first on this page
+BRO->USR: if you want THAT\n you first have to login on this page
+USR->BRO: here are my email and password
+BRO->SER: here are the email and password of my user
+SER->SER: does this email/password pair correspond\nto a user I Know?
+SER->SER: what is the role of the existing user?
+SER->SER: can this role access THAT
+SER->BRO: here is THAT
+BRO->USR: here is THAT

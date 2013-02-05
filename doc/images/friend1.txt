@@ -1,0 +1,9 @@
+participant "User" as USR
+participant "Browser" as BRO
+participant "Server" as SER
+
+USR->BRO: show me THAT
+BRO->SER: I need THAT to be shown to my user
+SER->SER: Has THAT any access restriction?
+SER->BRO: Here is THAT
+BRO->USR: Here is THAT

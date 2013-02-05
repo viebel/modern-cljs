@@ -1,20 +1,161 @@
 # Tutorial 14 - A friend is more valuable of a treasure
 
-In the [latest tutorial][1] we were able to reach the following decent
+In the [latest tutorial][1] we were able to reach few decent
 objectives:
 
 * follow the Don't Repeat Yourself (DRY) principle by sharing the code
   of the `Login Form` validators that are commons between the
-  server-side and the client-side; 
+  server-side and the client-side;
 * adhere to the progressive enhancement strategy by defining and
   remotising a server-side only validator.
 
-To complete the use of the `Login Form` as a reference sample for our long
-journey in the CLJS/CLJ land, we need to fill few residual gaps.
+To complete the use of the `Login Form` as a reference sample for our
+long journey in the CLJS/CLJ land, we need to fill few residual gaps. A
+couple of them have to do with the communication between the client-side
+and the server-side:
+
+* the authentication of the incoming request from the client;
+* the authorization of the authenticated request to have a certain level
+  of access to a server-side resource.
+
 
 # Introduction
 
-In this tutorial we're going to fill two residual gaps for completing 
+I like using sequence diagrams to better understand a problem. Someone
+once said that there are no impossibile problems to be solved, there are
+only misplaced problems. Sequence diagrams help me to be less faulty in
+describing a problem.
+
+Here is an happy-path sequence diagram and following are few comments.
+
+![Happy Path 1][]
+
+Here everyone is happy. The requested resource is public and everyone
+can access it, at least in reading mode. Sometimes resources are not
+available to any one, but only to known people with a known role.
+
+Here is a second, more articulated happy-path sequence diagrams
+
+![Happy Path 2][]
+
+Aside from those who want to have access to resources non available to
+everyone, in the above diagram all of the actors are happy again. The
+reosurse had some kind of access restrictions, but the user shown valid
+credentials (login/password and role) to the server and had access to
+the resource.
+
+Now the first non happy-path.
+
+![Bad Path 1][]
+
+Now the user is a little bit disappointed. Perhaps he made a typo. But
+he still has few chances to try again.
+
+Finally, the opposit of the happy ending.
+
+![Bad Path 2][]
+
+The user is now frustrated. The system know him, but it dosn't want to
+give him access to the requested resourse.
+
+# A compojure friend
+
+If you organize all the above sequence diagrams together by adding few
+conditionals, you have the big picture which, in clojure, is named
+[Friend][]. But you still need [Compojure][]. We can say that [Friend][]
+is very friendly with [Compojure][] by helping it in discerning who has
+the rights to apply a method (e.g. GET, PUT, etc.) to a certain resource
+(i.e. URI) and those that can't.
+
+Before doing anything else, add the [Friend][] lib to `modern-cljs`
+project dependencies.
+
+```clojure
+;;; project.clj
+...
+   :dependencies [[org.clojure/clojure "1.4.0"]
+                  [compojure "1.1.5"]
+                  [hiccups "0.2.0"]
+                  [com.cemerick/shoreleave-remote-ring "0.0.2"]
+                  [shoreleave/shoreleave-remote "0.2.2"]
+                  [com.cemerick/valip "0.3.2"]
+                  [com.cemerick/friend "0.1.3"]]
+...
+```
+
+# Create a new route
+
+Let's start coding by opening the `core.clj` file where we defined the
+routes of our stupid web application and add a new route within the body
+of the `defroute` macro. We start very simple.
+
+
+```clojure
+(ns modern-cljs.core
+  (:require [compojure.core :refer [defroutes GET POST]]
+            [compojure.route :refer [resources not-found]]
+            [compojure.handler :refer [site]]
+            [modern-cljs.login :refer [authenticate-user]]
+            [cemerick.friend :refer [authorize]]))
+
+(defroutes app-routes
+  (GET "/" [] "<p>Hello from compojure</p>")
+  ;; a reserved route
+  (GET "/admin" request (authorize #{::admin} "<p>Admin Reserved Page</p1>"))
+  (POST "/login" [email password] (authenticate-user email password))
+  (resources "/")
+  (not-found "Page non found"))
+```
+
+We first added `[cemerik.friend :refer [authorize]]` to the namespace
+declaration and then defined a new route which is only accessible by an
+authenticated user with an authorized role of `::admin`.
+
+That's not enough. We need to inform the [ring][] `handler` to submit
+any request to authentication by wrapping the `handler` itself within
+the `authenticate` function like so.
+
+```clojure
+(ns modern-cljs.core
+  (:require ...
+            [cemerick.friend :refer [authorize authenticate]]))
+
+...
+....
+(def handler
+  (site (authenticate app-routes {})))
+```
+
+> NOTE 1: Remember to add `authenticate` in the required expression of the
+> namespace declaration.
+
+> NOTE 2: the `authenticate` function receives an handler and a map which
+> at the moment is the empty map `{}`.
+
+Let's see what happens if we run the application as usual.
+
+```bash
+$ lein cljsbuild auto dev
+$ lein ring server-headless # in a new terminal
+```
+
+Now visit the added [admin url][] and you'll be redirect to a non
+existent `/localhost:3000/login` page. That's because by default
+`friend` redirects a request of a reserved page from an unauhtenticated
+user to the `\login` page.
+
+At the moment this page is non existent, but we
+already created a `login-dbg.html` page before starting playing with
+[Friend][]. Luckly, [Chas Emerick][] forecasted this usage
+
+But we defined a
+`login-dbg.html` in our `resourses/pulic` directory   tell the user she has to
+
+
+
+
+
+In this tutorial we're going to fill two residual gaps for completing
 kind of security. To face this new topic, which again is crossing the
 border between the client and the server, we'll use the [Friend][5]
 library. Useless to say that had been donated to us by
@@ -214,7 +355,18 @@ First, enter the [ring][]/[compujure][] libraries again. Open the
 defined in a previous [tutorial][].
 
 ```clojure
-
+(defroutes app-routes
+  ;; to serve document root address
+  (GET "/" [] "<p>Hello from compojure</p>")
+  ;; an admin protected route
+  (GET "/admin" request (authorize #{::admin}
+                                  "<p>Admin Reserver Page</p>" "Admin page"))
+  ;; to authenticate the user
+  (POST "/login" [email password] (authenticate-user email password))
+  ;; to server static pages saved in resources/public directory
+  (resources "/")
+  ;; if page is not found
+  (not-found "Page non found"))
 ```
 
 
