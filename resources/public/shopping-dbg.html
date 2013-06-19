@@ -10,7 +10,7 @@
 </head>
 <body>
   <!-- shopping.html -->
-  <form id="shoppingForm" novalidate>
+  <form action="/shopping" method="post" id="shoppingForm" novalidate>
     <legend> Shopping Calculator</legend>
     <fieldset>
 
@@ -60,16 +60,12 @@
 
       <br><br>
       <div>
-        <input type="button"
+        <input type="submit"
                value="Calculate"
                id="calc">
       </div>
 
     </fieldset>
   </form>
-  <script src="js/modern_dbg.js"></script>
-  <script>
-    modern_cljs.shopping.init();
-  </script>
 </body>
 </html>
