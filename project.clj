@@ -6,11 +6,12 @@
   :min-lein-version "2.1.2"
 
   ;; clojure source code path
-  :source-paths ["src/clj"]
+  :source-paths ["src/clj" "test"]
 
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compojure "1.1.5"]
                  [hiccups "0.2.0"]
+                 [hiccup "1.0.3"]
                  [domina "1.0.2-SNAPSHOT"]
                  [shoreleave/shoreleave-remote-ring "0.3.0"]
                  [shoreleave/shoreleave-remote "0.3.0"]
