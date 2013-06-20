@@ -3,7 +3,8 @@
             [compojure.route :refer [resources not-found]]
             [compojure.handler :refer [site]]
             [modern-cljs.login :refer [authenticate-user]]
-            [modern-cljs.shopping :refer [shopping]]))
+            [modern-cljs.shopping :refer [shopping]]
+            [shoreleave.middleware.rpc :refer [wrap-rpc]]))
 
 ;; defroutes macro defines a function that chains individual route
 ;; functions together. The request map is passed to each function in
@@ -24,3 +25,8 @@
 ;;; adding a bunch of standard ring middleware to app-route:
 (def handler
   (site app-routes))
+
+;;; middleware
+(def app (-> (var handler)
+             (wrap-rpc)
+             (site)))

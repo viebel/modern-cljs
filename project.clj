@@ -24,7 +24,7 @@
   ;; :hooks [leiningen.cljsbuild]
 
   ;; ring tasks configuration
-  :ring {:handler modern-cljs.remotes/app}
+  :ring {:handler modern-cljs.core/app}
 
   ;; cljsbuild tasks configuration
   :cljsbuild {:crossovers [valip.core valip.predicates modern-cljs.login.validators]
