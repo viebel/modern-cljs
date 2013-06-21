@@ -1,32 +1,31 @@
 (ns modern-cljs.shopping
   (:require-macros [hiccups.core :refer [html]])
-  (:require [domina :refer [by-id value by-class set-value! append! destroy!]]
+  (:require [domina :refer [by-id by-class value set-value! insert-after! destroy!]]
             [domina.events :refer [listen! prevent-default]]
             [hiccups.runtime :as hiccupsrt]
-            [shoreleave.remotes.http-rpc :refer [remote-callback]]
-            [cljs.reader :refer [read-string]]))
+            [modern-cljs.shopping.validators :refer [validate-form]]
+            [shoreleave.remotes.http-rpc :refer [remote-callback]]))
+
+(defn handle-response [errors field value]
+  (if-let [error (field errors)]
+    (insert-after! (by-id (name field)) (html [:div [:span.error (first error)]]))
+    (set-value! (by-id (name field)) value)))
 
 (defn calculate [evt]
-  (let [quantity (read-string (value (by-id "quantity")))
-        price (read-string (value (by-id "price")))
-        tax (read-string (value (by-id "tax")))
-        discount (read-string (value (by-id "discount")))]
-    (remote-callback :calculate
-                     [quantity price tax discount]
-                     #(set-value! (by-id "total") (.toFixed % 2)))
+  (destroy! (by-class "error"))
+  (let [quantity (value (by-id "quantity"))
+        price (value (by-id "price"))
+        tax (value (by-id "tax"))
+        discount (value (by-id "discount"))
+        errors (validate-form quantity price tax discount)]
+    (doall (map #(handle-response errors %1 %2) [:quantity :price :tax :discount] [quantity price tax discount]))
+    (when-not errors
+      (remote-callback :calculate
+                       [quantity price tax discount]
+                       #(set-value! (by-id "total") (.toFixed % 2))))
     (prevent-default evt)))
-
-(defn add-help! []
-  (append! (by-id "shoppingForm")
-               (html [:div.help "Click to calculate"])))
-
-(defn remove-help![]
-  ;;(destroy! (by-class "help")))
-  (destroy! (.getElementsByClassName js/document "help")))
 
 (defn ^:export init []
   (when (and js/document
              (aget js/document "getElementById"))
-    (listen! (by-id "calc") :click (fn [evt] (calculate evt)))
-    (listen! (by-id "calc") :mouseover add-help!)
-    (listen! (by-id "calc") :mouseout remove-help!)))
+    (listen! (by-id "calc") :click (fn [evt] (calculate evt)))))

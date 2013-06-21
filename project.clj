@@ -28,7 +28,7 @@
   :ring {:handler modern-cljs.core/app}
 
   ;; cljsbuild tasks configuration
-  :cljsbuild {:crossovers [valip.core valip.predicates modern-cljs.login.validators]
+  :cljsbuild {:crossovers [valip.core valip.predicates modern-cljs.login.validators modern-cljs.shopping.validators]
               :builds
               [{;; build id
                 :id "dev"
