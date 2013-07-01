@@ -6,17 +6,18 @@
   :min-lein-version "2.1.2"
 
   ;; clojure source code path
-  :source-paths ["src/clj" "test"]
+  :source-paths ["src/clj" "test/clj"]
 
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compojure "1.1.5"]
                  [hiccups "0.2.0"]
                  [hiccup "1.0.3"]
                  [domina "1.0.2-SNAPSHOT"]
+                 [enlive "1.1.1"]
                  [shoreleave/shoreleave-remote-ring "0.3.0"]
                  [shoreleave/shoreleave-remote "0.3.0"]
                  [com.cemerick/valip "0.3.2"]
-                 [enlive "1.1.1"]]
+                 [com.cemerick/clojurescript.test "0.0.4"]]
 
   :plugins [[lein-cljsbuild "0.3.2"]
             [lein-ring "0.8.5"]]
@@ -41,7 +42,10 @@
                            ;; minimum optimization
                            :optimizations :whitespace
                            ;; prettyfying emitted JS
-                           :pretty-print true}}
+                           :pretty-print true
+                           
+                           ;; source-map file
+                           :source-map "resources/public/js/source-map.js.map"}}
                {;; build id
                 :id "pre-prod"
                 :source-paths ["src/brepl" "src/cljs"]
@@ -50,7 +54,10 @@
                            :output-to "resources/public/js/modern_pre.js"
 
                            ;; simple optimization
-                           :optimizations :simple}}
+                           :optimizations :simple
+
+                           ;; source map file
+                           :source-map "resources/public/js/source-map.js.map"}}
                {;; build id
                 :id "prod"
                 :source-paths ["src/cljs"]

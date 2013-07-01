@@ -11,9 +11,8 @@
 <body>
   <!-- shopping.html -->
   <form action="/shopping" method="post" id="shoppingForm" novalidate>
-    <legend> Shopping Calculator</legend>
-    <fieldset>
-
+    <fieldset form="shoppingForm">
+      <legend> Shopping Calculator</legend>
       <div>
         <label for="quantity">Quantity</label>
         <input type="number"
@@ -40,7 +39,6 @@
                value="0.0"
                required>
       </div>
-      <div id="help"></div>
 
       <div>
         <label for="discount">Discount</label>
@@ -57,8 +55,8 @@
                id="total"
                value="0.00">
       </div>
-
-      <br><br>
+      <br>
+      <br>
       <div>
         <input type="submit"
                value="Calculate"

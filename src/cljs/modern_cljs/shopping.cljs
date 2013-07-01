@@ -12,6 +12,8 @@
     (set-value! (by-id (name field)) value)))
 
 (defn calculate [evt]
+  (prevent-default evt)
+  (stocazzo)
   (destroy! (by-class "error"))
   (let [quantity (value (by-id "quantity"))
         price (value (by-id "price"))
@@ -22,10 +24,10 @@
     (when-not errors
       (remote-callback :calculate
                        [quantity price tax discount]
-                       #(set-value! (by-id "total") (.toFixed % 2))))
-    (prevent-default evt)))
+                       #(set-value! (by-id "total") (.toFixed % 2))))))
 
 (defn ^:export init []
   (when (and js/document
              (aget js/document "getElementById"))
     (listen! (by-id "calc") :click (fn [evt] (calculate evt)))))
+
