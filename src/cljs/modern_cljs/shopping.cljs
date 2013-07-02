@@ -13,7 +13,6 @@
 
 (defn calculate [evt]
   (prevent-default evt)
-  (stocazzo)
   (destroy! (by-class "error"))
   (let [quantity (value (by-id "quantity"))
         price (value (by-id "price"))
