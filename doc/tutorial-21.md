@@ -437,8 +437,8 @@ First we augumented the project with the `:dev` profile and we also
 added to it the `piggieback` instrumentation which requires the
 `:repl-options` and the `:injections` setting as well.
 
-Next we moved the `clojurescript.test` lib into the `:plugins`
-option of the `:dev` profile.
+Next we moved the `clojurescript.test` lib into the `:plugins` option
+of the `:dev` profile.
 
 Finally we moved to the `:dev` profile the builds used for testing
 purpose only and the corresponding test-commands as well.
@@ -497,23 +497,26 @@ as expected. We should now predispose the `Enfocus` project, already
 instrumented with `piggieback`, to connect itself to the browser JS
 engine as we explained in the [Tutorial 18 - Housekeeping][8].
 
-## Postpone the bREPL connection
+## Predispose the bREPL connection
 
-As you remember there are more step to be done:
+Even if we instrumented the project with the `piggieback` lib, we
+still have to do more work to be able to create a bREPL connection. As
+you remember these are the step to be done:
 
 * create and run an http server to respect the
   [same origin policy][9];
 * create a cljs source file to create the bREPL connection;
-* create an html page which includes the link to the bREPL connection;
+* create an html page which includes the link to the JS file emitted
+  by the `cljsbuild` which include the above bREPL connection;
 * launch the `lein repl` task from the main project directory;
 * call the `(browser-repl)` function from the CLJ REPL;
 * visit the above html page;
 * use the bREPL.
 
-We're going to pospone all this stuff to the next tutorial, because we
-first want to deploy the revised `Enfocus` lib to `clojars` and try to
-use it in a very simple new project to verify that even after all the
-changes we did, the `Enfocus` lib is still working as expected.
+We're going to pospone all this stuff for later, because we first want
+to deploy the revised `Enfocus` lib to `clojars` and try to use it in
+a very simple new project to verify that even after all the changes we
+made, the `Enfocus` lib is still working as expected.
 
 ## Deploy on clojars
 
@@ -592,7 +595,7 @@ mkdir -p src/{cljs/hello_enfocus,clj}
 mv src/hello_enfocus src/clj
 ```
 
-Now create the `core.cljs` file in the `src/cljs/hello-enfocus`
+Next create the `core.cljs` file in the `src/cljs/hello-enfocus`
 directory with the following content:
 
 ```clj
@@ -609,7 +612,7 @@ directory with the following content:
 (set! (.-onload js/window) start)
 ```
 
-Next compile it as usual.
+Then compile it as usual.
 
 ```bash
 lein cljsbuild once
@@ -620,7 +623,7 @@ Compiling "resources/public/js/hello.js" from ["src/cljs"]...
 Successfully compiled "resources/public/js/hello.js" in 10.468363 seconds.
 ```
 
-Then create the `hello.html` file in the `resources/public` directory
+Finally create the `hello.html` file in the `resources/public` directory
 with the following content:
 
 ```html
@@ -644,7 +647,233 @@ Now open the `~/dev/hello-enfocus/resources/public/hello.html` file
 in your browser and you should see the `Hello, Enfocus!` string
 shown in the page.
 
+## bREPLing with enfocus
+
+It's now time to end the `bREPL` instrumentation of the `Enfocus`
+project we started before, by adding to the `project.clj` file the
+`pieggiback` lib, the `:repl-options` setting and the `:injection`
+option.
+
+The path is not going to be so direct as it was in the `modern-cljs`
+project, because we started to worry about the content to be put into
+the `jar` packace and the content we want to be kept out from it.
+
+### Separation of concerns
+
+As we explained in the [Tutorial 2][], to be able to connect a CLJS
+REPL to the browser JS engine we need to setup an HTTP server. That's
+because of the [same origin policy][] limitation imposed by the
+browser for security reasons.
+
+In the `Enfocus` lib the HTTPS server is going to serve reasources
+used for testing purpose only and we do not want those resources to be
+packaged into its `jar`.
+
+As we learnt in the previous paragraphs of this tutorial, we can
+exploit the `:dev` profile to keep separated the things to be packaged
+into the `jar` from the things that are only useful for developing and
+testing purpouse.
+
+### The CLJ HTTP Server
+
+The general setup of a CLJ based HTTP server has been explained in the
+[Tutotial 3][]. *Mutatis mutandis* we should now do almost the same
+thing, this time in the `:dev` profile.
+
+First we want to add the [lein-ring][] plugin and the [compojure][]
+lib to the `:dev` profile as follows:
+
+```clj
+(defproject org.clojars.magomimmo/enfocus "2.0.1-SNAPSHOT"
+  ...
+  :profiles {:dev {:dependencies [...
+	                              [compojure "1.1.5"]]
+                   
+                   :plugins [...
+				             [lein-ring "0.8.7"]]
+                   
+                   :ring {:handler enfocus.server/handler}
+				   ...}})
+```
+
+Note that we also configured the `:ring` handler, even if we still
+have to define it. This is the next thing to do. Ask yourself where
+would you create the `server.clj` source? Not in the `src/clj/enfocus`
+directory, otherwise it will be packaged in the `jar`. Consider that
+we're predisposing the `ring` server to be able to create a `bREPL`
+connection. And we want the `bREPL` to be able to test the `Enfocus`
+lib from a REPL. So, the right place to safe the `server.clj` file is
+in the `test/clj/enfocus` directory.
+
+```bash
+mkdir -p test/clj/enfocus`
+```
+
+Now create the `server.clj` file in the newly created directory and
+fill it with the following content:
+
+```clj
+(ns enfocus.server
+  (:use compojure.core)
+  (:require [compojure.handler :as handler]
+            [compojure.route :as route]
+            [ring.util.response :as resp]))
+
+(defroutes app-routes
+  (GET "/" [] (resp/redirect "/connect.html"))
+  (route/resources "/")
+  (route/not-found "Page not found"))
+
+(def handler
+  (handler/site app-routes))
+```
+
+This is almost the exact content we already wrote in the
+[Tutorial 3][]. Here we only changed the `GET` macro from returning
+the `<p>Hello from Compojure!<\p>` to redirect the user to the
+`connect.html` page, which brings us to the `dev-reosurces` directory.
+
+Whatever will be the `connect.html` page content, that page can't be
+saved in the `resources` directory path if we don't want it to be
+included in the `jar` package. At the same time, the
+`resources` directory is the default path used by the
+`route/resources` to serve static resources.
+
+Luckly, `lein` offers us an escape way by letting set a
+`:resources-paths` option which allow to change that default directory
+to the one we desire. Again, we are dealing with testing stuff and
+therefore we're going to set this optioni in the `:dev` profile as
+follows:
+
+```clj
+(defproject enfocus "2.0.1-SNAPSHOT"
+  ...
+  :profiles {:dev {:resources-paths ["dev-resources"]
+                  ...}})
+```
+
+### The bREPL connection
+
+We nopw have to create the CLJS code that establishes the connection
+with the JS Engine of the browser. By following our old friend
+*separation of concerns principle* we alreay know that we have to
+create the file in the `test` codebase. But remember that we can't use
+a bREPL connection with the `:advanced` optimization. For this reason
+we're going to create the `connect.cljs` source file in the
+`test/brepl/enfocus` directory in such a way that we can distinguish
+the `:source-paths` for each build of the `cljsbuils` plugin. Here is
+the content of the `connect.clj` source file.
+
+```clj
+(ns enfocus.connect
+  (:require [clojure.browser.repl :as repl]))
+
+(repl/connect "http://localhost:9000/repl")
+```
+
+### The connect page
+
+We have setup the server and created the CLJS code that will connect
+the REPL with the JS Engine of the browser. Now we have to create the
+HTML page to be used as mediator for connecting the REPL to the
+browser.
+
+If you're guessing this is the `connect.html` page we were talking
+about while discussing the ring server configuration, you're right.
+
+Create the `connect.html` file in the `dev-resources/public` directory
+and type the following html code.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>bREPL Connection</title>
+    <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <!-- pointing to a cljsbuild generated js file -->
+    <script src="js/whitespace.js"></script>
+</body>
+</html>
+```
+
+Note the `src` of the `script` tag is the `whitespace.js` file
+generated by the `whitespace` build. We could have choosen the
+`simple` build as well, but not the `deploy` and neither the
+`advanced` one. The `deploy` build is devoted for the jar packiging
+only and the `advanced` build is notcompatible with a bREPL due to the
+`:advanced` optimization option use for the compiler.
+
+### Reflect the changes in the `project.clj`
+
+We have now to reflect the latest intervetions into the `project.clj`,
+more precisely we have to modify all the builds but the `deploy` one.
+
+```clj
+(defproject org.clojars.magomimmo/enfocus "2.0.1-SNAPSHOT"
+  ...
+  :profiles {:dev {...
+	               :cljsbuild 
+                   {:builds {:whitespace
+                             {:source-paths ["src/cljs" "test/cljs" "src/brepl"]
+							  ...}}
+                             
+                             :simple
+                             {:source-paths ["src/cljs" "test/cljs" "src/brepl"]
+                              ...}}
+  ...}})
+```
+
+### Light the fire
+
+We are now ready to test if everything is working as expected. First
+recompile everything from scratch.
+
+```bash
+lein do clean, compile
+Deleting files generated by lein-cljsbuild.
+Compiling ClojureScript.
+Compiling "dev-resources/public/js/whitespace.js" from ["src/cljs" "test/cljs" "src/brepl"]...
+WARNING: set-print-fn! already refers to: cljs.core/set-print-fn! being replaced by: cemerick.cljs.test/set-print-fn! at line 252 file:/Users/mimmo/.m2/repository/com/cemerick/clojurescript.test/0.1.0/clojurescript.test-0.1.0.jar!/cemerick/cljs/test.cljs
+WARNING: set-print-fn! already refers to: cljs.core/set-print-fn! being replaced by: cemerick.cljs.test/set-print-fn! at line 252 /Users/mimmo/Developer/enfocus/target/cljsbuild-compiler-0/cemerick/cljs/test.cljs
+Successfully compiled "dev-resources/public/js/whitespace.js" in 11.446879 seconds.
+Compiling "dev-resources/public/js/advanced.js" from ["src/cljs" "test/cljs"]...
+WARNING: set-print-fn! already refers to: cljs.core/set-print-fn! being replaced by: cemerick.cljs.test/set-print-fn! at line 252 file:/Users/mimmo/.m2/repository/com/cemerick/clojurescript.test/0.1.0/clojurescript.test-0.1.0.jar!/cemerick/cljs/test.cljs
+WARNING: set-print-fn! already refers to: cljs.core/set-print-fn! being replaced by: cemerick.cljs.test/set-print-fn! at line 252 /Users/mimmo/Developer/enfocus/target/cljsbuild-compiler-1/cemerick/cljs/test.cljs
+Successfully compiled "dev-resources/public/js/advanced.js" in 13.103964 seconds.
+Compiling "dev-resources/public/js/simple.js" from ["src/cljs" "test/cljs" "src/brepl"]...
+WARNING: set-print-fn! already refers to: cljs.core/set-print-fn! being replaced by: cemerick.cljs.test/set-print-fn! at line 252 /Users/mimmo/Developer/enfocus/target/cljsbuild-compiler-2/cemerick/cljs/test.cljs
+Successfully compiled "dev-resources/public/js/simple.js" in 6.407385 seconds.
+Compiling "dev-resources/public/js/deploy.js" from ["src/cljs"]...
+Successfully compiled "dev-resources/public/js/deploy.js" in 3.748136 seconds.
+```
+
+Ok. The compilation process produced the 4 expected JS file. Next run the ring server.
+
+```bash
+Giacomo-Cosenzas-iMac:enfocus mimmo$ lein ring server-headless
+Compiling ClojureScript.
+2013-10-13 23:15:04.615:INFO:oejs.Server:jetty-7.6.8.v20121106
+2013-10-13 23:15:04.649:INFO:oejs.AbstractConnector:Started SelectChannelConnector@0.0.0.0:3000
+Started server on port 3000
+```
+
+Good. It worked too. Now open a new terminal, cd into the `enfocus`
+main directory and run the bREPL.
+
+```clj
+
+lein repl
+
+```
+which the user is redirected buy the ring server  correctly guess that 
+
 Stay tuned for the next tutorial.
+
 
 # Next Step - TO BE DONE
 
