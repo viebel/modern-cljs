@@ -28,7 +28,7 @@
   :plugins [[lein-ring "0.8.7"]
             [lein-cljsbuild "0.3.4"]]
 
-  :hooks [leiningen.cljsbuild]
+  :hooks [cljx.hooks leiningen.cljsbuild]
 
   :ring {:handler modern-cljs.core/app}
 
@@ -50,7 +50,7 @@
                    :dependencies [[com.cemerick/piggieback "0.1.0"]]
 
                    :plugins [[com.cemerick/clojurescript.test "0.1.0"]
-                             [com.keminglabs/cljx "0.3.0"]]
+                             [com.keminglabs/cljx "0.3.1-SNAPSHOT"]]
 
                    :cljx {:builds [{:source-paths ["test/cljx"]
                                     :output-path "target/test/clj"
