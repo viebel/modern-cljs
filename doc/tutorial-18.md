@@ -64,7 +64,7 @@ In this tutorial we're going to introduce the setting up of a less
 limited bREPL to be run from an [nREPL][8] launched by [Leiningen][5]
 via the `lein repl` task.
 
-As pointed out by [Ian Eslick][9] in his very useful [tutorial][10] on
+As pointed out by [Ian Eslick][9] in his very useful [Tutorial][10] on
 setting up a Clojure debugging environment.
 
 > nREPL is a tooling framework for allowing editors (clients) to
@@ -105,7 +105,7 @@ The third and latest step requires:
 ### STEP 1
 
 Already done in the cited tutorials (i.e. [Tutorial 2][2],
-[Tutorial 3][3] and [Tutorial 7[4]).
+[Tutorial 3][3] and [Tutorial 7][4]).
 
 ### Step 2
 
@@ -117,7 +117,7 @@ Open the `project.clj` file and update its dependencies as follows:
   ...
   :dependencies [...
                  ...
-                 [com.cemerick/piggieback "0.1.0"]
+                 [com.cemerick/piggieback "0.1.2"]
                  ...
                  ...]
   ...
@@ -162,14 +162,12 @@ lein compile
 lein ring server-headless
 ```
 
-> NOTE 5: Don't worry about the `*WARNING*` messages you
-> receive during the CLJS compilation. Considering that older CLJS
-> builds don't define the `set-print-fn!` function in the `cljs.core`
-> namespace, the `clojurescript.test` lib defines it in the
-> `cemerick.cljs.test` namespace, but when you're running a newer CLJS
-> build that function is already defined.
+> NOTE 5: Depending on your JVM configuration it could happen that after
+> few compilations the process fails with an `OutOfMemoryError`. In this
+> case just rerun the `lein compile` task.
 
-Next launch the `lein repl` task from a new terminal to run a new nREPL session.
+Next launch the `lein repl` task from a new terminal to run a new
+nREPL session.
 
 ```bash
 # open a new terminal command
@@ -283,6 +281,28 @@ cljs.user=>
 
 As usual, you activate the bREPL connection by visiting one of
 the pages from the `:dev` or the `:pre-prod` builds.
+
+## From Piggieback to Austin
+
+Even if `Piggieback` offers a much more comfortable bREPL experience
+than the standard `lein trampoline cljsbuild repl-listen` one, it
+still has few limitations. [Chas Emerick][11], the author of
+`Piggieback` created [Austin][23] with the intent of
+
+> getting into a fast ClojureScript REPL suited for a project running in
+> a browser environment as quickly and painlessly as possible, with full
+> support for the nREPL toolchain.
+
+### Austin installation
+
+`Austin` is available as a `lein plugin` and transitively brings into
+your project the `Piggieback` lib which you have to remove from the
+`:dependencies` setting as well as the corresponding `:repl-options`
+and `:injections` options we shown above.
+
+
+
+
 
 ## The need of a more comfortable project structure
 
@@ -855,3 +875,4 @@ License, the same as Clojure.
 [20]: https://github.com/lynaghk/cljx
 [21]: http://localhost:3000/shopping-dbg.html
 [22]: https://github.com/magomimmo/modern-cljs/blob/master/doc/tutorial-19.md
+[23]: https://github.com/cemerick/austin
